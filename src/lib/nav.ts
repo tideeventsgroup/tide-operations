@@ -29,7 +29,7 @@ export const staffNavItems: NavItem[] = [
 
 export const adminNavItems: NavItem[] = [
   { label: "Users & Roles", href: "/admin/users", icon: Users },
-  { label: "Template Administration", href: "/admin/templates", icon: FileCog },
+  { label: "Document Types", href: "/admin/document-types", icon: FileCog },
 ];
 
 export function visibleAdminNavItems(staffRole: StaffRole | null) {

@@ -12,8 +12,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.15"
   }
@@ -73,46 +71,6 @@ export type Database = {
           },
         ]
       }
-      document_knowledge_references: {
-        Row: {
-          document_id: string
-          knowledge_block_id: string
-          section_key: string
-        }
-        Insert: {
-          document_id: string
-          knowledge_block_id: string
-          section_key: string
-        }
-        Update: {
-          document_id?: string
-          knowledge_block_id?: string
-          section_key?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "document_knowledge_references_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "documents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "document_knowledge_references_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "v_review_queue"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "document_knowledge_references_knowledge_block_id_fkey"
-            columns: ["knowledge_block_id"]
-            isOneToOne: false
-            referencedRelation: "knowledge_blocks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       document_reference_counters: {
         Row: {
           last_value: number
@@ -131,49 +89,37 @@ export type Database = {
         }
         Relationships: []
       }
-      document_templates: {
+      document_types: {
         Row: {
           code: string
           created_at: string
           created_by: string | null
           id: string
-          locked_brand_elements: Json
           name: string
-          output_format: Database["public"]["Enums"]["document_output_format"]
           status: Database["public"]["Enums"]["template_status"]
-          structure_json: Json
           updated_at: string
-          version: number
         }
         Insert: {
           code: string
           created_at?: string
           created_by?: string | null
           id?: string
-          locked_brand_elements?: Json
           name: string
-          output_format?: Database["public"]["Enums"]["document_output_format"]
           status?: Database["public"]["Enums"]["template_status"]
-          structure_json?: Json
           updated_at?: string
-          version?: number
         }
         Update: {
           code?: string
           created_at?: string
           created_by?: string | null
           id?: string
-          locked_brand_elements?: Json
           name?: string
-          output_format?: Database["public"]["Enums"]["document_output_format"]
           status?: Database["public"]["Enums"]["template_status"]
-          structure_json?: Json
           updated_at?: string
-          version?: number
         }
         Relationships: [
           {
-            foreignKeyName: "document_templates_created_by_fkey"
+            foreignKeyName: "document_types_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
@@ -184,12 +130,14 @@ export type Database = {
       document_versions: {
         Row: {
           approved_by: string | null
-          content_json: Json
           created_at: string
           created_by: string | null
           document_id: string
+          file_name: string
+          file_size: number | null
+          file_storage_path: string
           id: string
-          pdf_storage_path: string | null
+          mime_type: string | null
           review_comments: Json
           reviewed_by: string | null
           submitted_by: string | null
@@ -198,12 +146,14 @@ export type Database = {
         }
         Insert: {
           approved_by?: string | null
-          content_json?: Json
           created_at?: string
           created_by?: string | null
           document_id: string
+          file_name: string
+          file_size?: number | null
+          file_storage_path: string
           id?: string
-          pdf_storage_path?: string | null
+          mime_type?: string | null
           review_comments?: Json
           reviewed_by?: string | null
           submitted_by?: string | null
@@ -212,12 +162,14 @@ export type Database = {
         }
         Update: {
           approved_by?: string | null
-          content_json?: Json
           created_at?: string
           created_by?: string | null
           document_id?: string
+          file_name?: string
+          file_size?: number | null
+          file_storage_path?: string
           id?: string
-          pdf_storage_path?: string | null
+          mime_type?: string | null
           review_comments?: Json
           reviewed_by?: string | null
           submitted_by?: string | null
@@ -273,10 +225,10 @@ export type Database = {
         Row: {
           approved_at: string | null
           client_visible: boolean
-          completion_pct: number
           created_at: string
           created_by: string | null
           current_version_id: string | null
+          document_type_id: string
           event_id: string
           id: string
           issued_at: string | null
@@ -285,17 +237,16 @@ export type Database = {
           reviewed_at: string | null
           status: Database["public"]["Enums"]["document_status"]
           submitted_at: string | null
-          template_id: string
           title: string
           updated_at: string
         }
         Insert: {
           approved_at?: string | null
           client_visible?: boolean
-          completion_pct?: number
           created_at?: string
           created_by?: string | null
           current_version_id?: string | null
+          document_type_id: string
           event_id: string
           id?: string
           issued_at?: string | null
@@ -304,17 +255,16 @@ export type Database = {
           reviewed_at?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           submitted_at?: string | null
-          template_id: string
           title: string
           updated_at?: string
         }
         Update: {
           approved_at?: string | null
           client_visible?: boolean
-          completion_pct?: number
           created_at?: string
           created_by?: string | null
           current_version_id?: string | null
+          document_type_id?: string
           event_id?: string
           id?: string
           issued_at?: string | null
@@ -323,7 +273,6 @@ export type Database = {
           reviewed_at?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           submitted_at?: string | null
-          template_id?: string
           title?: string
           updated_at?: string
         }
@@ -340,6 +289,13 @@ export type Database = {
             columns: ["current_version_id"]
             isOneToOne: false
             referencedRelation: "document_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
             referencedColumns: ["id"]
           },
           {
@@ -361,13 +317,6 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "documents_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "document_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -961,10 +910,10 @@ export type Database = {
         Returns: {
           approved_at: string | null
           client_visible: boolean
-          completion_pct: number
           created_at: string
           created_by: string | null
           current_version_id: string | null
+          document_type_id: string
           event_id: string
           id: string
           issued_at: string | null
@@ -973,7 +922,6 @@ export type Database = {
           reviewed_at: string | null
           status: Database["public"]["Enums"]["document_status"]
           submitted_at: string | null
-          template_id: string
           title: string
           updated_at: string
         }

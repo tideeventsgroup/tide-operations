@@ -3,13 +3,21 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { Json } from "@/lib/supabase/types";
+
+function sanitizeFilename(name: string) {
+  return name.replace(/[^a-zA-Z0-9._-]+/g, "_").slice(-120);
+}
 
 export async function createDocument(formData: FormData) {
   const supabase = await createClient();
   const eventId = String(formData.get("event_id"));
-  const templateId = String(formData.get("template_id"));
+  const documentTypeId = String(formData.get("document_type_id"));
   const title = String(formData.get("title"));
+  const file = formData.get("file") as File | null;
+
+  if (!file || file.size === 0) {
+    throw new Error("Choose a file to upload.");
+  }
 
   const {
     data: { user },
@@ -17,16 +25,26 @@ export async function createDocument(formData: FormData) {
 
   const { data: document, error } = await supabase
     .from("documents")
-    .insert({ event_id: eventId, template_id: templateId, title, owner_id: user?.id ?? null })
+    .insert({ event_id: eventId, document_type_id: documentTypeId, title, owner_id: user?.id ?? null })
     .select("id")
     .single();
 
   if (error) throw new Error(error.message);
 
+  const storagePath = `${eventId}/documents/${document.id}/v1-${sanitizeFilename(file.name)}`;
+  const { error: uploadError } = await supabase.storage
+    .from("event-files")
+    .upload(storagePath, file, { contentType: file.type || undefined, upsert: false });
+
+  if (uploadError) throw new Error(uploadError.message);
+
   const { error: versionError } = await supabase.from("document_versions").insert({
     document_id: document.id,
     version_number: 1,
-    content_json: {},
+    file_name: file.name,
+    file_storage_path: storagePath,
+    file_size: file.size,
+    mime_type: file.type || null,
     created_by: user?.id ?? null,
   });
 
@@ -36,26 +54,55 @@ export async function createDocument(formData: FormData) {
   redirect(`/documents/${document.id}`);
 }
 
-export async function saveDocumentContent(formData: FormData) {
+export async function uploadDocumentVersion(formData: FormData) {
   const supabase = await createClient();
   const documentId = String(formData.get("document_id"));
-  const versionId = String(formData.get("version_id"));
-  const contentJson = JSON.parse(String(formData.get("content_json"))) as Json;
-  const completionPct = Number(formData.get("completion_pct") ?? 0);
+  const file = formData.get("file") as File | null;
 
-  const { error: versionError } = await supabase
+  if (!file || file.size === 0) {
+    throw new Error("Choose a file to upload.");
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: document, error: documentError } = await supabase
+    .from("documents")
+    .select("event_id")
+    .eq("id", documentId)
+    .single();
+
+  if (documentError) throw new Error(documentError.message);
+
+  const { data: lastVersion } = await supabase
     .from("document_versions")
-    .update({ content_json: contentJson })
-    .eq("id", versionId);
+    .select("version_number")
+    .eq("document_id", documentId)
+    .order("version_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const nextVersion = (lastVersion?.version_number ?? 0) + 1;
+  const storagePath = `${document.event_id}/documents/${documentId}/v${nextVersion}-${sanitizeFilename(file.name)}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("event-files")
+    .upload(storagePath, file, { contentType: file.type || undefined, upsert: false });
+
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { error: versionError } = await supabase.from("document_versions").insert({
+    document_id: documentId,
+    version_number: nextVersion,
+    file_name: file.name,
+    file_storage_path: storagePath,
+    file_size: file.size,
+    mime_type: file.type || null,
+    created_by: user?.id ?? null,
+  });
 
   if (versionError) throw new Error(versionError.message);
-
-  const { error: docError } = await supabase
-    .from("documents")
-    .update({ completion_pct: completionPct })
-    .eq("id", documentId);
-
-  if (docError) throw new Error(docError.message);
 
   revalidatePath(`/documents/${documentId}`);
 }

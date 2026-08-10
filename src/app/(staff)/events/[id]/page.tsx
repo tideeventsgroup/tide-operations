@@ -26,7 +26,6 @@ import {
 import { createDocument } from "@/lib/actions/documents";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StageBadge, DocumentStatusBadge, TaskStatusBadge } from "@/components/status-badges";
@@ -58,13 +57,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       supabase.from("tasks").select("*").eq("event_id", id).order("due_date"),
       supabase
         .from("documents")
-        .select("id, reference, title, status, completion_pct, document_templates(name)")
+        .select("id, reference, title, status, document_types(name)")
         .eq("event_id", id)
         .order("created_at", { ascending: false }),
     ]);
 
-  const { data: templates } = await supabase
-    .from("document_templates")
+  const { data: documentTypes } = await supabase
+    .from("document_types")
     .select("id, name")
     .eq("status", "published");
 
@@ -352,10 +351,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               <form action={createDocument} className="flex flex-wrap items-end gap-2.5">
                 <input type="hidden" name="event_id" value={id} />
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Template</label>
-                  <select name="template_id" required className="h-9 rounded-md border border-input bg-background px-3 text-sm">
+                  <label className="text-xs font-medium text-muted-foreground">Type</label>
+                  <select name="document_type_id" required className="h-9 rounded-md border border-input bg-background px-3 text-sm">
                     <option value="">Select…</option>
-                    {templates?.map((t) => (
+                    {documentTypes?.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.name}
                       </option>
@@ -365,6 +364,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">Title</label>
                   <Input name="title" placeholder={`${event.name} — OSSP`} required />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">File</label>
+                  <input
+                    type="file"
+                    name="file"
+                    required
+                    className="block text-sm text-tide-charcoal file:mr-3 file:rounded-md file:border-0 file:bg-tide-teal/12 file:px-3 file:py-1.5 file:text-[13px] file:font-medium file:text-tide-teal hover:file:bg-tide-teal/20"
+                  />
                 </div>
                 <Button type="submit" size="sm">
                   Create
@@ -390,14 +398,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                         <div className="truncate font-medium text-tide-charcoal">{doc.title}</div>
                         <div className="truncate text-[12.5px] text-muted-foreground">
                           {doc.reference ?? "Unreferenced"} ·{" "}
-                          {(doc.document_templates as { name: string } | null)?.name}
+                          {(doc.document_types as { name: string } | null)?.name}
                         </div>
-                      </div>
-                      <div className="hidden w-24 shrink-0 items-center gap-2 sm:flex">
-                        <Progress value={doc.completion_pct} className="w-full" />
-                        <span className="w-8 text-right text-[11px] text-muted-foreground tabular-nums">
-                          {doc.completion_pct}%
-                        </span>
                       </div>
                       <DocumentStatusBadge status={doc.status} />
                     </Link>

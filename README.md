@@ -1,20 +1,22 @@
 # Tide Operations System
 
 Tide Events Group Scotland's internal event-lifecycle platform — event records,
-document production, and (in later phases) live incident control and a client
-portal. Built from the [Technical Architecture Specification](.) (v0.1, 10 Aug
-2026).
+controlled document management, and (in later phases) live incident control
+and a client portal. Built from the [Technical Architecture Specification](.)
+(v0.1, 10 Aug 2026), since adapted from a schema-driven document editor to a
+simpler uploaded-file model at the client's request.
 
 This build covers **Phase 1 (Foundation)** and **Phase 2 (Planning tools)** of
-the spec's roadmap: auth, dashboard, event/client/task management, and a
-schema-driven Document Studio with a working OSSP template end-to-end
-(editor → approval workflow → branded PDF export).
+the spec's roadmap: auth, dashboard, event/client/task management, and
+controlled document management — staff upload a file against a document type
+and event; the platform owns the reference number, version history, and the
+Draft → In review → Needs updates → Approved → Issued → Archived approval
+workflow around it.
 
 ## Stack
 
 Next.js 16 (App Router, TypeScript) · Tailwind CSS v4 + shadcn/ui (Base UI) ·
-TanStack Query · Supabase (Postgres, Auth, Storage, RLS) · Puppeteer
-(server-side PDF rendering).
+TanStack Query · Supabase (Postgres, Auth, Storage, RLS).
 
 ## Getting started
 
@@ -53,7 +55,7 @@ promote anyone — including the very first user. To bootstrap:
    where email = 'you@tideeventsgroup.co.uk';
    ```
 3. Sign in — you'll now see the full staff app plus the Admin section
-   (Users & Roles, Template Administration).
+   (Users & Roles, Document Types).
 
 Supabase Auth requires email confirmation before sign-in by default. Locally,
 either disable "Confirm email" under Authentication → Providers → Email in
@@ -84,11 +86,22 @@ comments for detail):
   move a document through Draft → In review → Needs updates → Approved →
   Issued → Archived is the `transition_document_status()` RPC, which
   enforces the valid-transition graph and role checks server-side
-  (`0006_document_rls_and_workflow.sql`). This satisfies the spec's
-  requirement that approval transitions be validated server-side, without
-  needing a separate Next.js Route Handler for it.
+  (`0006_document_rls_and_workflow.sql`).
+- **Documents are uploaded files, not structured content** (`0011_document_
+  types_and_uploads.sql`). Each `document_versions` row is one uploaded file
+  (`file_name`/`file_storage_path`/`file_size`/`mime_type`) rather than a
+  `content_json` blob — re-uploading creates a new version rather than
+  overwriting; an issued version is never overwritten. `document_types`
+  (name + reference code) replaced the earlier structured-template system
+  (`document_templates` with `structure_json`/`locked_brand_elements`) — it's
+  just a label used for organising uploads and driving the reference number,
+  not a form definition.
 - **Document references are generated atomically** (`TEG-<CODE>-<YEAR>-<seq>`,
-  e.g. `TEG-OSSP-2026-014`) via a per-template/year counter table.
+  e.g. `TEG-OSSP-2026-014`) via a per-type/year counter table.
+- **Files are served via short-lived signed URLs** generated server-side
+  after an RLS-backed authorisation check (spec §8.1) — see
+  `src/app/api/documents/[id]/file/route.ts`. Objects in the `event-files`
+  Storage bucket are never public.
 - **New Supabase Auth users always land as `pending`** via an
   `on_auth_user_created` trigger — there's no "first user becomes admin"
   window.
@@ -102,33 +115,17 @@ is linked).
 **Working now:** sign-in / restricted registration / admin role assignment,
 staff dashboard, event CRUD with stage tracking and audit trail, client
 (organisation/contact) management, portfolio task board, milestones, the
-Knowledge Library, Template Administration (read view), and the full OSSP
-Document Studio flow — schema-driven editor, draft autosave, the approval
-state machine, and branded PDF export to Supabase Storage.
+Knowledge Library, Document Types administration, and the full document
+control flow — upload a file against an event and type, version history,
+signed-URL downloads, and the approval state machine.
 
 **Deliberately out of scope for this build** (see spec §10, Phases 3–6):
-remaining master templates beyond OSSP, the reviews/approvals queue as a
-dedicated screen, the client portal (routes exist as a placeholder only),
-incident management / M/ETHANE, and production hardening (invitation emails,
-full multi-page PDF rendering, load testing, accessibility pass).
-
-### Known follow-ups
-
-- PDF generation currently launches a fresh headless Chromium instance per
-  request (~15–20s cold). The spec's NFR target is <10s — worth pooling/
-  reusing a browser instance before this goes near production load.
-- `document_knowledge_references` (the join table linking a document version
-  to the knowledge blocks it cites) is defined and RLS-protected but not yet
-  populated by the editor — knowledge block references are currently only
-  resolved at PDF-render time from `content_json`, not recorded as a queryable
-  link.
+the reviews/approvals queue as a dedicated screen, the client portal (routes
+exist as a placeholder only), incident management / M/ETHANE, and production
+hardening (invitation emails, load testing, accessibility pass).
 
 ## Deployment
 
 Frontend on Vercel, backend on Supabase Cloud — both already provisioned in
 `eu-west-2` (EU) per the spec's UK GDPR data-residency requirement. Set the
-same environment variables as above in the Vercel project. PDF generation on
-Vercel's serverless runtime needs `puppeteer-core` + `@sparticuz/chromium`
-(both installed) rather than the full `puppeteer` package used locally —
-`src/lib/pdf/launch-browser.ts` already branches on `process.env.VERCEL` to
-pick the right one.
+same environment variables as above in the Vercel project.
