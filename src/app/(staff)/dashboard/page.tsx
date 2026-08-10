@@ -1,8 +1,13 @@
 import Link from "next/link";
+import { AlertTriangle, CalendarClock, CalendarDays, CheckCircle2, FileCheck2, ListChecks } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
+import { StatCard } from "@/components/stat-card";
+import { EmptyState } from "@/components/empty-state";
+import { ListRow } from "@/components/list-row";
+import { StageBadge, DocumentStatusBadge } from "@/components/status-badges";
 import { Badge } from "@/components/ui/badge";
-import { StageBadge } from "@/components/status-badges";
 
 type DashboardEvent = {
   id: string;
@@ -39,6 +44,13 @@ type DashboardSnapshot = {
   approval_requests_count: number;
 };
 
+const PRIORITY_STYLES: Record<string, string> = {
+  low: "bg-muted text-muted-foreground",
+  medium: "bg-info-bg text-info",
+  high: "bg-warning-bg text-warning",
+  urgent: "bg-destructive/10 text-destructive",
+};
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_dashboard_snapshot");
@@ -52,124 +64,148 @@ export default async function DashboardPage() {
   }) as DashboardSnapshot;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-tide-charcoal">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Operational overview across every event you have access to.</p>
-      </div>
+    <div className="mx-auto max-w-6xl">
+      <PageHeader
+        title="Dashboard"
+        description="Operational overview across every event you have access to."
+      />
 
       {error && (
-        <p className="text-sm text-destructive">Couldn&apos;t load dashboard data: {error.message}</p>
+        <p className="mb-4 text-sm text-destructive">Couldn&apos;t load dashboard data: {error.message}</p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="In review / needs updates" value={snapshot.review_queue_count} href="/events" />
-        <StatCard label="Open tasks" value={snapshot.open_tasks_count} href="/tasks" />
-        <StatCard label="Awaiting issue" value={snapshot.approval_requests_count} href="/events" />
+      <div className="grid gap-3.5 sm:grid-cols-3">
+        <StatCard
+          label="In review / needs updates"
+          value={snapshot.review_queue_count}
+          href="/events"
+          icon={AlertTriangle}
+          tone="warning"
+        />
+        <StatCard label="Open tasks" value={snapshot.open_tasks_count} href="/tasks" icon={ListChecks} />
+        <StatCard
+          label="Awaiting issue"
+          value={snapshot.approval_requests_count}
+          href="/events"
+          icon={FileCheck2}
+          tone="info"
+        />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Upcoming events</CardTitle>
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <Card className="gap-0 py-0">
+          <CardHeader className="border-b py-4">
+            <CardTitle className="flex items-center gap-2 text-[15px]">
+              <CalendarDays className="size-4 text-tide-teal" />
+              Upcoming events
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="px-0 py-1">
             {snapshot.upcoming_events.length ? (
-              snapshot.upcoming_events.map((event) => (
-                <Link
-                  key={event.id}
-                  href={`/events/${event.id}`}
-                  className="flex items-center justify-between rounded-md border p-3 text-sm transition-colors hover:bg-accent"
-                >
-                  <div className="min-w-0">
-                    <div className="truncate font-medium text-tide-charcoal">{event.name}</div>
-                    <div className="truncate text-muted-foreground">
-                      {event.organisation_name ?? "No client"} · {event.venue ?? "Venue TBC"}
-                    </div>
-                  </div>
-                  <StageBadge stage={event.stage} />
-                </Link>
-              ))
+              <div className="divide-y">
+                {snapshot.upcoming_events.map((event) => (
+                  <ListRow
+                    key={event.id}
+                    href={`/events/${event.id}`}
+                    icon={CalendarDays}
+                    title={event.name}
+                    subtitle={`${event.organisation_name ?? "No client"} · ${event.venue ?? "Venue TBC"}`}
+                    trailing={<StageBadge stage={event.stage} />}
+                  />
+                ))}
+              </div>
             ) : (
-              <EmptyRow label="No upcoming events." />
+              <EmptyState
+                icon={CalendarDays}
+                title="No upcoming events"
+                description="Events you're assigned to will appear here."
+                className="border-none"
+              />
             )}
-            <Link href="/events" className="block pt-1 text-sm text-tide-teal underline underline-offset-4">
-              View all events
-            </Link>
           </CardContent>
+          <div className="border-t px-4 py-2.5">
+            <Link href="/events" className="text-[13px] font-medium text-tide-teal hover:underline">
+              View all events →
+            </Link>
+          </div>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Review queue</CardTitle>
+        <Card className="gap-0 py-0">
+          <CardHeader className="border-b py-4">
+            <CardTitle className="flex items-center gap-2 text-[15px]">
+              <FileCheck2 className="size-4 text-tide-teal" />
+              Review queue
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="px-0 py-1">
             {snapshot.review_queue.length ? (
-              snapshot.review_queue.map((doc) => (
-                <Link
-                  key={doc.id}
-                  href={`/documents/${doc.id}`}
-                  className="flex items-center justify-between rounded-md border p-3 text-sm transition-colors hover:bg-accent"
-                >
-                  <div className="min-w-0">
-                    <div className="truncate font-medium text-tide-charcoal">{doc.title}</div>
-                    <div className="truncate text-muted-foreground">
-                      {doc.reference ?? "Unreferenced"} · {doc.event_name}
-                    </div>
-                  </div>
-                  <Badge variant="outline">{doc.status.replace("_", " ")}</Badge>
-                </Link>
-              ))
+              <div className="divide-y">
+                {snapshot.review_queue.map((doc) => (
+                  <ListRow
+                    key={doc.id}
+                    href={`/documents/${doc.id}`}
+                    icon={FileCheck2}
+                    title={doc.title}
+                    subtitle={`${doc.reference ?? "Unreferenced"} · ${doc.event_name}`}
+                    trailing={<DocumentStatusBadge status={doc.status} />}
+                  />
+                ))}
+              </div>
             ) : (
-              <EmptyRow label="Nothing awaiting review." />
+              <EmptyState
+                icon={CheckCircle2}
+                title="Nothing awaiting review"
+                description="Documents submitted for review will show up here."
+                className="border-none"
+              />
             )}
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">My open tasks</CardTitle>
+        <Card className="gap-0 py-0 lg:col-span-2">
+          <CardHeader className="border-b py-4">
+            <CardTitle className="flex items-center gap-2 text-[15px]">
+              <ListChecks className="size-4 text-tide-teal" />
+              My open tasks
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="px-0 py-1">
             {snapshot.my_open_tasks.length ? (
-              snapshot.my_open_tasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between rounded-md border p-3 text-sm">
-                  <div className="min-w-0">
-                    <div className="truncate font-medium text-tide-charcoal">{task.title}</div>
-                    <div className="truncate text-muted-foreground">
-                      {task.event_name ?? "Portfolio-level"}
-                      {task.due_date ? ` · Due ${task.due_date}` : ""}
-                    </div>
-                  </div>
-                  <Badge variant="outline">{task.priority}</Badge>
-                </div>
-              ))
+              <div className="divide-y">
+                {snapshot.my_open_tasks.map((task) => (
+                  <ListRow
+                    key={task.id}
+                    href="/tasks"
+                    icon={CalendarClock}
+                    title={task.title}
+                    subtitle={
+                      task.event_name
+                        ? `${task.event_name}${task.due_date ? ` · Due ${task.due_date}` : ""}`
+                        : `Portfolio-level${task.due_date ? ` · Due ${task.due_date}` : ""}`
+                    }
+                    trailing={
+                      <Badge variant="outline" className={PRIORITY_STYLES[task.priority]}>
+                        {task.priority}
+                      </Badge>
+                    }
+                  />
+                ))}
+              </div>
             ) : (
-              <EmptyRow label="No open tasks assigned to you." />
+              <EmptyState
+                icon={ListChecks}
+                title="No open tasks assigned to you"
+                className="border-none"
+              />
             )}
-            <Link href="/tasks" className="block pt-1 text-sm text-tide-teal underline underline-offset-4">
-              View task board
-            </Link>
           </CardContent>
+          <div className="border-t px-4 py-2.5">
+            <Link href="/tasks" className="text-[13px] font-medium text-tide-teal hover:underline">
+              View task board →
+            </Link>
+          </div>
         </Card>
       </div>
     </div>
   );
-}
-
-function StatCard({ label, value, href }: { label: string; value: number; href: string }) {
-  return (
-    <Link href={href}>
-      <Card className="transition-colors hover:border-tide-teal">
-        <CardContent className="pt-6">
-          <div className="text-3xl font-semibold text-tide-charcoal">{value}</div>
-          <div className="text-sm text-muted-foreground">{label}</div>
-        </CardContent>
-      </Card>
-    </Link>
-  );
-}
-
-function EmptyRow({ label }: { label: string }) {
-  return <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">{label}</p>;
 }

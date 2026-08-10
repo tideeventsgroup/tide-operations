@@ -1,7 +1,11 @@
 import Link from "next/link";
+import { CalendarDays, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
+import { ListRow } from "@/components/list-row";
 import { StageBadge } from "@/components/status-badges";
 
 export default async function EventsPage() {
@@ -12,41 +16,48 @@ export default async function EventsPage() {
     .order("start_date", { ascending: true, nullsFirst: false });
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-tide-charcoal">Events</h1>
-          <p className="text-sm text-muted-foreground">Every engagement Tide is running or has run.</p>
-        </div>
-        <Button render={<Link href="/events/new" />} nativeButton={false}>New event</Button>
-      </div>
+    <div className="mx-auto max-w-5xl">
+      <PageHeader
+        title="Events"
+        description="Every engagement Tide is running or has run."
+        actions={
+          <Button render={<Link href="/events/new" />} nativeButton={false}>
+            <Plus className="size-4" />
+            New event
+          </Button>
+        }
+      />
 
-      {error && <p className="text-sm text-destructive">{error.message}</p>}
+      {error && <p className="mb-4 text-sm text-destructive">{error.message}</p>}
 
-      <Card>
-        <CardContent className="divide-y p-0">
+      <Card className="gap-0 py-0">
+        <CardContent className="px-0 py-1">
           {events?.length ? (
-            events.map((event) => (
-              <Link
-                key={event.id}
-                href={`/events/${event.id}`}
-                className="flex items-center justify-between gap-4 p-4 text-sm transition-colors hover:bg-accent"
-              >
-                <div className="min-w-0">
-                  <div className="truncate font-medium text-tide-charcoal">{event.name}</div>
-                  <div className="truncate text-muted-foreground">
-                    {(event.organisations as { name: string } | null)?.name ?? "No client"} ·{" "}
-                    {event.venue ?? "Venue TBC"}
-                    {event.start_date ? ` · ${event.start_date}` : ""}
-                  </div>
-                </div>
-                <StageBadge stage={event.stage} />
-              </Link>
-            ))
+            <div className="divide-y">
+              {events.map((event) => (
+                <ListRow
+                  key={event.id}
+                  href={`/events/${event.id}`}
+                  icon={CalendarDays}
+                  title={event.name}
+                  subtitle={`${(event.organisations as { name: string } | null)?.name ?? "No client"} · ${event.venue ?? "Venue TBC"}${event.start_date ? ` · ${event.start_date}` : ""}`}
+                  trailing={<StageBadge stage={event.stage} />}
+                />
+              ))}
+            </div>
           ) : (
-            <p className="p-6 text-sm text-muted-foreground">
-              No events yet. <Link href="/events/new" className="text-tide-teal underline">Create the first one.</Link>
-            </p>
+            <EmptyState
+              icon={CalendarDays}
+              title="No events yet"
+              description="Create the first engagement to get started."
+              className="border-none py-14"
+              action={
+                <Button render={<Link href="/events/new" />} nativeButton={false} size="sm">
+                  <Plus className="size-4" />
+                  New event
+                </Button>
+              }
+            />
           )}
         </CardContent>
       </Card>

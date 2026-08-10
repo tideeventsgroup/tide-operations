@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, Download, FileText, History } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { DocumentEditor } from "@/components/document-editor/document-editor";
 import { DocumentWorkflow } from "@/components/document-editor/document-workflow";
@@ -57,19 +58,31 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
   const readOnly = !["draft", "needs_updates"].includes(document.status);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold text-tide-charcoal">{document.title}</h1>
-            <DocumentStatusBadge status={document.status} />
+    <div className="mx-auto max-w-5xl">
+      <Link
+        href={`/events/${event.id}`}
+        className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-tide-charcoal"
+      >
+        <ArrowLeft className="size-3.5" />
+        {event.name}
+      </Link>
+
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-lg bg-tide-teal/12 text-tide-teal">
+            <FileText className="size-5" strokeWidth={2} />
           </div>
-          <p className="text-sm text-muted-foreground">
-            {document.reference ?? "Unreferenced"} · {template.name} ·{" "}
-            <Link href={`/events/${event.id}`} className="text-tide-teal underline">
-              {event.name}
-            </Link>
-          </p>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-[22px] leading-tight font-bold tracking-tight text-tide-charcoal">
+                {document.title}
+              </h1>
+              <DocumentStatusBadge status={document.status} />
+            </div>
+            <p className="mt-1 font-mono text-[12.5px] text-muted-foreground">
+              {document.reference ?? "Unreferenced"} · {template.name}
+            </p>
+          </div>
         </div>
         <Button
           render={<a href={`/api/documents/${id}/pdf`} target="_blank" rel="noreferrer" />}
@@ -77,6 +90,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
           variant="outline"
           size="sm"
         >
+          <Download className="size-3.5" />
           Download PDF
         </Button>
       </div>
@@ -95,17 +109,31 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
         />
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Version history</CardTitle>
+      <Card className="mt-5 gap-0 py-0">
+        <CardHeader className="border-b py-4">
+          <CardTitle className="flex items-center gap-2 text-[15px]">
+            <History className="size-4 text-tide-teal" />
+            Version history
+          </CardTitle>
         </CardHeader>
-        <CardContent className="divide-y p-0">
-          {versions?.map((v) => (
-            <div key={v.id} className="flex items-center justify-between p-3 text-sm">
-              <span>Version {v.version_number}</span>
-              <span className="text-muted-foreground">{new Date(v.created_at).toLocaleString("en-GB")}</span>
-            </div>
-          ))}
+        <CardContent className="px-0 py-1">
+          <div className="divide-y">
+            {versions?.map((v) => (
+              <div key={v.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                <span className="font-medium text-tide-charcoal">
+                  Version {v.version_number}
+                  {v.id === currentVersion?.id && (
+                    <span className="ml-2 rounded-full bg-tide-teal/10 px-2 py-0.5 text-[10.5px] font-semibold text-tide-teal">
+                      Current
+                    </span>
+                  )}
+                </span>
+                <span className="text-[12.5px] text-muted-foreground">
+                  {new Date(v.created_at).toLocaleString("en-GB")}
+                </span>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>

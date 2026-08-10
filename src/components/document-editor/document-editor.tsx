@@ -2,11 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Plus, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 import { saveDocumentContent } from "@/lib/actions/documents";
 import {
   buildEventVariables,
@@ -71,15 +73,16 @@ export function DocumentEditor({
   }
 
   return (
-    <div className="space-y-4 pb-24">
+    <div className={cn("space-y-3.5", !readOnly && "pb-24")}>
       {structure.sections.map((section) => (
-        <Card key={section.key}>
-          <CardHeader>
-            <CardTitle className="text-base">
-              {section.number}. {section.title}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <Card key={section.key} className="gap-0 py-0">
+          <div className="flex items-center gap-2.5 border-b px-5 py-3.5">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-tide-teal text-[11px] font-bold text-white">
+              {section.number}
+            </span>
+            <h3 className="text-[14.5px] font-semibold text-tide-charcoal">{section.title}</h3>
+          </div>
+          <CardContent className="space-y-4 py-4 pl-[46px]">
             {section.fields.map((field) => {
               const value = content[section.key]?.[field.key];
 
@@ -87,8 +90,8 @@ export function DocumentEditor({
                 const resolved = field.variable ? eventVariables[field.variable] : "";
                 return (
                   <div key={field.key} className="space-y-1">
-                    <div className="text-xs font-medium text-muted-foreground">{field.label}</div>
-                    <div className="rounded-md border border-dashed bg-muted/40 px-3 py-2 text-sm text-tide-charcoal">
+                    <div className="text-[11px] font-semibold tracking-wide text-tide-teal uppercase">{field.label}</div>
+                    <div className="rounded-md border border-dashed border-border bg-muted/40 px-3 py-2 text-sm text-tide-charcoal">
                       {resolved || "Not set"}
                       {field.suffix ?? ""}
                     </div>
@@ -99,7 +102,7 @@ export function DocumentEditor({
               if (field.type === "textarea") {
                 return (
                   <div key={field.key} className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">
+                    <label className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                       {field.label}
                       {field.required && <span className="text-destructive"> *</span>}
                     </label>
@@ -118,16 +121,16 @@ export function DocumentEditor({
                 const columns = field.columns ?? [];
                 return (
                   <div key={field.key} className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">
+                    <label className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                       {field.label}
                       {field.required && <span className="text-destructive"> *</span>}
                     </label>
                     <div className="overflow-x-auto rounded-md border">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b bg-muted/40">
+                          <tr className="border-b bg-muted/50">
                             {columns.map((col) => (
-                              <th key={col} className="px-2 py-1.5 text-left font-medium text-tide-charcoal">
+                              <th key={col} className="px-2.5 py-2 text-left text-[11.5px] font-semibold text-tide-charcoal">
                                 {col}
                               </th>
                             ))}
@@ -157,10 +160,11 @@ export function DocumentEditor({
                                   <Button
                                     type="button"
                                     variant="ghost"
-                                    size="sm"
+                                    size="icon-sm"
+                                    aria-label="Remove row"
                                     onClick={() => updateField(section.key, field.key, rows.filter((_, i) => i !== rowIndex))}
                                   >
-                                    ×
+                                    <Trash2 className="size-3.5 text-muted-foreground" />
                                   </Button>
                                 )}
                               </td>
@@ -176,6 +180,7 @@ export function DocumentEditor({
                         size="sm"
                         onClick={() => updateField(section.key, field.key, [...rows, {}])}
                       >
+                        <Plus className="size-3.5" />
                         Add row
                       </Button>
                     )}
@@ -189,7 +194,7 @@ export function DocumentEditor({
                 const selected = options.find((o) => o.id === refValue);
                 return (
                   <div key={field.key} className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">
+                    <label className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                       {field.label}
                       {field.required && <span className="text-destructive"> *</span>}
                     </label>
@@ -207,9 +212,12 @@ export function DocumentEditor({
                       ))}
                     </select>
                     {selected && (
-                      <p className="rounded-md border border-dashed bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                        {selected.content}
-                      </p>
+                      <div className="rounded-r-md border-l-[3px] border-tide-teal bg-tide-teal/5 py-2 pr-3 pl-3">
+                        <div className="mb-0.5 text-[10px] font-semibold tracking-wide text-tide-teal uppercase">
+                          Knowledge Library
+                        </div>
+                        <p className="text-[12.5px] leading-relaxed text-tide-charcoal">{selected.content}</p>
+                      </div>
                     )}
                   </div>
                 );
@@ -217,7 +225,7 @@ export function DocumentEditor({
 
               return (
                 <div key={field.key} className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">
+                  <label className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                     {field.label}
                     {field.required && <span className="text-destructive"> *</span>}
                   </label>
@@ -235,12 +243,16 @@ export function DocumentEditor({
 
       {!readOnly && (
         <div className="fixed inset-x-0 bottom-0 z-10 border-t bg-white/95 backdrop-blur md:left-64">
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Completion</span>
-              <Badge variant="outline">{completionPct}%</Badge>
+          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 md:px-8">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <span className="shrink-0 text-[12.5px] font-medium text-muted-foreground">Completion</span>
+              <Progress value={completionPct} className="w-32" />
+              <span className="w-9 shrink-0 text-[12.5px] font-semibold text-tide-charcoal tabular-nums">
+                {completionPct}%
+              </span>
             </div>
             <Button onClick={handleSave} disabled={pending}>
+              <Save className="size-3.5" />
               {pending ? "Saving…" : "Save draft"}
             </Button>
           </div>
@@ -249,3 +261,4 @@ export function DocumentEditor({
     </div>
   );
 }
+

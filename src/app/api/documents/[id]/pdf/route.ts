@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { renderDocumentHtml } from "@/lib/pdf/render-document-html";
+import { renderDocumentHtml, buildPdfFooterTemplate, buildPdfHeaderTemplate } from "@/lib/pdf/render-document-html";
 import { launchBrowser } from "@/lib/pdf/launch-browser";
 import type { DocumentContent, TemplateStructure } from "@/lib/document-schema";
 
@@ -104,6 +104,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     knowledgeBlockContentById,
   });
 
+  const brand = template.locked_brand_elements as {
+    margins_mm?: { top: number; right: number; bottom: number; left: number };
+    colours?: { charcoal?: string; teal?: string };
+  };
+  const baseMargins = brand.margins_mm ?? { top: 20, right: 18, bottom: 20, left: 18 };
+  const teal = brand.colours?.teal ?? "#60B9C5";
+
   const browser = await launchBrowser();
   let pdfBuffer: Buffer;
   try {
@@ -118,6 +125,18 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     pdfBuffer = Buffer.from(
       await page.pdf({
         printBackground: true,
+        displayHeaderFooter: true,
+        headerTemplate: buildPdfHeaderTemplate({ title: document.title, teal }),
+        footerTemplate: buildPdfFooterTemplate({
+          reference: document.reference,
+          versionNumber: version.version_number,
+        }),
+        margin: {
+          top: `${baseMargins.top + 8}mm`,
+          bottom: `${baseMargins.bottom + 8}mm`,
+          left: `${baseMargins.left}mm`,
+          right: `${baseMargins.right}mm`,
+        },
         ...(isPresentation
           ? { width: "13.33in", height: "7.5in" }
           : { format }),

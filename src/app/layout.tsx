@@ -4,7 +4,7 @@ import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "Tide Operations System",
+  title: "Tide Events Group — Operations System",
   description: "Tide Events Group Scotland — event lifecycle platform",
 };
 

@@ -1,3 +1,13 @@
+import {
+  LayoutDashboard,
+  CalendarDays,
+  Building2,
+  ListChecks,
+  BookOpen,
+  Users,
+  FileCog,
+  type LucideIcon,
+} from "lucide-react";
 import type { Database } from "@/lib/supabase/types";
 
 type StaffRole = Database["public"]["Enums"]["staff_role"];
@@ -5,20 +15,21 @@ type StaffRole = Database["public"]["Enums"]["staff_role"];
 export type NavItem = {
   label: string;
   href: string;
+  icon: LucideIcon;
   adminOnly?: boolean;
 };
 
 export const staffNavItems: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Events", href: "/events" },
-  { label: "Clients", href: "/clients" },
-  { label: "Tasks", href: "/tasks" },
-  { label: "Knowledge Library", href: "/knowledge" },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Events", href: "/events", icon: CalendarDays },
+  { label: "Clients", href: "/clients", icon: Building2 },
+  { label: "Tasks", href: "/tasks", icon: ListChecks },
+  { label: "Knowledge Library", href: "/knowledge", icon: BookOpen },
 ];
 
 export const adminNavItems: NavItem[] = [
-  { label: "Users & Roles", href: "/admin/users" },
-  { label: "Template Administration", href: "/admin/templates" },
+  { label: "Users & Roles", href: "/admin/users", icon: Users },
+  { label: "Template Administration", href: "/admin/templates", icon: FileCog },
 ];
 
 export function visibleAdminNavItems(staffRole: StaffRole | null) {

@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { StaffSidebarNav } from "@/components/layout/staff-sidebar";
 import { StaffHeader } from "@/components/layout/staff-header";
+import { BrandMark } from "@/components/brand-mark";
 import { signOut } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
-import { staffNavItems, visibleAdminNavItems } from "@/lib/nav";
+import { initials } from "@/lib/utils";
 
 const roleLabels: Record<string, string> = {
   admin: "Administrator",
@@ -34,26 +36,43 @@ export default async function StaffLayout({ children }: { children: React.ReactN
     redirect("/portal");
   }
 
-  const adminItems = visibleAdminNavItems(profile.staff_role);
   const roleLabel = roleLabels[profile.staff_role] ?? profile.staff_role;
+  const displayName = profile.full_name || user.email || "";
 
   return (
     <div className="flex min-h-screen flex-1">
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-tide-charcoal text-white md:flex">
-        <div className="flex h-14 flex-shrink-0 items-center border-b border-white/10 px-4">
-          <span className="text-sm font-semibold tracking-wide text-tide-teal uppercase">
-            Tide Operations System
-          </span>
+        <div className="flex h-16 flex-shrink-0 items-center gap-2.5 border-b border-white/[0.08] px-4">
+          <BrandMark className="size-8 shrink-0" />
+          <div className="min-w-0 leading-tight">
+            <div className="truncate text-[13px] font-bold tracking-tight text-white">
+              Tide Events Group
+            </div>
+            <div className="truncate text-[10px] font-semibold tracking-[0.1em] text-tide-teal uppercase">
+              Operations System
+            </div>
+          </div>
         </div>
-        <StaffSidebarNav navItems={staffNavItems} adminItems={adminItems} />
-        <div className="flex flex-shrink-0 items-center justify-between border-t border-white/10 px-4 py-3">
-          <div className="min-w-0">
-            <div className="truncate text-sm font-medium">{profile.full_name || user.email}</div>
-            <div className="text-xs text-white/50">{roleLabel}</div>
+        <StaffSidebarNav staffRole={profile.staff_role} />
+        <div className="flex flex-shrink-0 items-center justify-between gap-2 border-t border-white/[0.08] px-3 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-tide-teal/20 text-[11px] font-bold text-tide-teal ring-1 ring-tide-teal/30">
+              {initials(displayName)}
+            </div>
+            <div className="min-w-0 leading-tight">
+              <div className="truncate text-[13px] font-medium text-white">{displayName}</div>
+              <div className="truncate text-[11px] text-white/45">{roleLabel}</div>
+            </div>
           </div>
           <form action={signOut}>
-            <Button type="submit" variant="ghost" size="sm" className="text-white/70 hover:bg-white/10 hover:text-white">
-              Sign out
+            <Button
+              type="submit"
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Sign out"
+              className="shrink-0 text-white/50 hover:bg-white/[0.08] hover:text-white"
+            >
+              <LogOut className="size-4" />
             </Button>
           </form>
         </div>
@@ -61,12 +80,11 @@ export default async function StaffLayout({ children }: { children: React.ReactN
 
       <div className="flex min-h-screen flex-1 flex-col md:ml-64">
         <StaffHeader
-          navItems={staffNavItems}
-          adminItems={adminItems}
-          fullName={profile.full_name || user.email || ""}
+          staffRole={profile.staff_role}
+          fullName={displayName}
           roleLabel={roleLabel}
         />
-        <main className="flex-1 overflow-x-hidden bg-muted/30 p-4 md:p-8">{children}</main>
+        <main className="flex-1 overflow-x-hidden bg-[#fafafa] p-4 md:p-8">{children}</main>
       </div>
     </div>
   );
