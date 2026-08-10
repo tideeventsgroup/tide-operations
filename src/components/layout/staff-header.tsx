@@ -30,8 +30,8 @@ export function StaffHeader({
         </SheetTrigger>
         <SheetContent side="left" className="w-64 border-none bg-tide-charcoal p-0 text-white">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
-          <div className="flex h-16 items-center gap-2.5 border-b border-white/[0.08] px-4">
-            <BrandMark className="size-8 shrink-0" />
+          <div className="flex h-14 items-center gap-2.5 border-b border-white/[0.08] px-4">
+            <BrandMark className="size-7 shrink-0" />
             <div className="min-w-0 leading-tight">
               <div className="truncate text-[13px] font-bold text-white">Tide Events Group</div>
               <div className="truncate text-[10px] font-semibold tracking-[0.1em] text-tide-teal uppercase">

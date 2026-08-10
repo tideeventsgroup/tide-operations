@@ -3,7 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { assignStaffRole, revokeAccess } from "@/lib/actions/admin";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { PageHeader } from "@/components/page-header";
 
 const ROLE_OPTIONS = [
   { value: "", label: "No role (pending)" },
@@ -36,68 +38,73 @@ export default async function AdminUsersPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-tide-charcoal">Users &amp; Roles</h1>
-        <p className="text-sm text-muted-foreground">
-          New accounts are created as <span className="font-medium">pending</span> with no
-          permissions until you assign a role here.
-        </p>
-      </div>
+    <div className="mx-auto max-w-4xl">
+      <PageHeader
+        title="Users & Roles"
+        description="New accounts are created as pending with no permissions until you assign a role here."
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">All accounts</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <Card className="gap-0 py-0">
+        <CardContent className="p-0">
           {profiles?.length ? (
-            profiles.map((profile) => (
-              <div
-                key={profile.id}
-                className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate font-medium">{profile.full_name || "(no name)"}</span>
-                    {profile.account_type === "pending" && (
-                      <Badge variant="outline" className="text-amber-600">
-                        Pending
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="truncate text-sm text-muted-foreground">{profile.email}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <form action={assignStaffRole} className="flex items-center gap-2">
-                    <input type="hidden" name="user_id" value={profile.id} />
-                    <select
-                      name="staff_role"
-                      defaultValue={profile.staff_role ?? ""}
-                      className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-                    >
-                      {ROLE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                    <Button type="submit" size="sm">
-                      Save
-                    </Button>
-                  </form>
-                  {profile.staff_role && (
-                    <form action={revokeAccess}>
-                      <input type="hidden" name="user_id" value={profile.id} />
-                      <Button type="submit" size="sm" variant="outline">
-                        Revoke
-                      </Button>
-                    </form>
-                  )}
-                </div>
-              </div>
-            ))
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="text-right">Role</TableHead>
+                  <TableHead className="w-24" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {profiles.map((profile) => (
+                  <TableRow key={profile.id}>
+                    <TableCell className="font-medium text-tide-charcoal">
+                      <span className="flex items-center gap-1.5">
+                        {profile.full_name || "(no name)"}
+                        {profile.account_type === "pending" && (
+                          <Badge variant="outline" className="bg-warning-bg text-[9.5px] text-warning">
+                            Pending
+                          </Badge>
+                        )}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{profile.email}</TableCell>
+                    <TableCell className="text-right">
+                      <form action={assignStaffRole} className="inline-flex items-center gap-1.5">
+                        <input type="hidden" name="user_id" value={profile.id} />
+                        <select
+                          name="staff_role"
+                          defaultValue={profile.staff_role ?? ""}
+                          className="h-7 rounded-md border border-input bg-background px-1.5 text-[12px]"
+                        >
+                          {ROLE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                        <Button type="submit" size="sm">
+                          Save
+                        </Button>
+                      </form>
+                    </TableCell>
+                    <TableCell>
+                      {profile.staff_role && (
+                        <form action={revokeAccess}>
+                          <input type="hidden" name="user_id" value={profile.id} />
+                          <Button type="submit" size="sm" variant="outline">
+                            Revoke
+                          </Button>
+                        </form>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           ) : (
-            <p className="text-sm text-muted-foreground">No accounts yet.</p>
+            <p className="p-4 text-[13px] text-muted-foreground">No accounts yet.</p>
           )}
         </CardContent>
       </Card>

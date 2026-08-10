@@ -104,22 +104,22 @@ export function DocumentWorkflow({
   }
 
   return (
-    <div className={cn("mb-5 rounded-xl border p-4", banner.bg, banner.border)}>
-      <div className="flex items-start gap-2.5">
-        <Icon className={cn("mt-0.5 size-[18px] shrink-0", banner.iconColor)} strokeWidth={2} />
-        <p className="text-[13.5px] leading-relaxed text-tide-charcoal">{banner.message}</p>
+    <div className={cn("mb-4 rounded-lg border p-3", banner.bg, banner.border)}>
+      <div className="flex items-start gap-2">
+        <Icon className={cn("mt-0.5 size-4 shrink-0", banner.iconColor)} strokeWidth={2} />
+        <p className="text-[12.5px] leading-relaxed text-tide-charcoal">{banner.message}</p>
       </div>
 
       {options.length > 0 && (
-        <div className="mt-3 space-y-2.5 border-t border-black/[0.06] pt-3">
+        <div className="mt-2.5 space-y-2 border-t border-black/[0.06] pt-2.5">
           <Textarea
             placeholder="Optional comment for this transition…"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={2}
-            className="border-black/10 bg-white/70"
+            className="border-black/10 bg-white/70 text-[13px]"
           />
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {options.map((opt) => (
               <Button key={opt.status} size="sm" disabled={pending} onClick={() => act(opt.status)}>
                 <Send className="size-3.5" />

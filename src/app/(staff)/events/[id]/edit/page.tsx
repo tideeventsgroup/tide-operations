@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,28 +19,28 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   if (!event) notFound();
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-2xl font-semibold text-tide-charcoal">Edit event</h1>
+    <div className="mx-auto max-w-2xl">
+      <PageHeader title="Edit event" />
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Event details</CardTitle>
+          <CardTitle className="text-[13px]">Event details</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={updateEvent} className="space-y-4">
+          <form action={updateEvent} className="space-y-3">
             <input type="hidden" name="id" value={event.id} />
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="name">Event name</Label>
-              <Input id="name" name="name" defaultValue={event.name} required />
+              <Input id="name" name="name" defaultValue={event.name} required className="h-8 text-[13px]" />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="organisation_id">Client</Label>
               <select
                 id="organisation_id"
                 name="organisation_id"
                 defaultValue={event.organisation_id ?? ""}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px]"
               >
                 <option value="">No client / internal</option>
                 {organisations?.map((org) => (
@@ -50,30 +51,30 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
                 <Label htmlFor="venue">Venue</Label>
-                <Input id="venue" name="venue" defaultValue={event.venue ?? ""} />
+                <Input id="venue" name="venue" defaultValue={event.venue ?? ""} className="h-8 text-[13px]" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="location">Location</Label>
-                <Input id="location" name="location" defaultValue={event.location ?? ""} />
+                <Input id="location" name="location" defaultValue={event.location ?? ""} className="h-8 text-[13px]" />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
                 <Label htmlFor="start_date">Start date</Label>
-                <Input id="start_date" name="start_date" type="date" defaultValue={event.start_date ?? ""} />
+                <Input id="start_date" name="start_date" type="date" defaultValue={event.start_date ?? ""} className="h-8 text-[13px]" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="end_date">End date</Label>
-                <Input id="end_date" name="end_date" type="date" defaultValue={event.end_date ?? ""} />
+                <Input id="end_date" name="end_date" type="date" defaultValue={event.end_date ?? ""} className="h-8 text-[13px]" />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
                 <Label htmlFor="expected_attendance">Expected attendance</Label>
                 <Input
                   id="expected_attendance"
@@ -81,15 +82,16 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
                   type="number"
                   min={0}
                   defaultValue={event.expected_attendance ?? ""}
+                  className="h-8 text-[13px]"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="control_location">Control location</Label>
-                <Input id="control_location" name="control_location" defaultValue={event.control_location ?? ""} />
+                <Input id="control_location" name="control_location" defaultValue={event.control_location ?? ""} className="h-8 text-[13px]" />
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="financial_value">Financial value (£)</Label>
               <Input
                 id="financial_value"
@@ -97,10 +99,13 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
                 type="number"
                 step="0.01"
                 defaultValue={event.financial_value ?? ""}
+                className="h-8 text-[13px]"
               />
             </div>
 
-            <Button type="submit">Save changes</Button>
+            <Button type="submit" size="sm">
+              Save changes
+            </Button>
           </form>
         </CardContent>
       </Card>

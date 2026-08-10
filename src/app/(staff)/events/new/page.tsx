@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
 
 export default async function NewEventPage() {
   const supabase = await createClient();
@@ -13,31 +14,29 @@ export default async function NewEventPage() {
     .order("name");
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-tide-charcoal">New event</h1>
-        <p className="text-sm text-muted-foreground">
-          Creates the event record everything else in the system will link to.
-        </p>
-      </div>
+    <div className="mx-auto max-w-2xl">
+      <PageHeader
+        title="New event"
+        description="Creates the event record everything else in the system will link to."
+      />
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Event details</CardTitle>
+          <CardTitle className="text-[13px]">Event details</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createEvent} className="space-y-4">
-            <div className="space-y-2">
+          <form action={createEvent} className="space-y-3">
+            <div className="space-y-1.5">
               <Label htmlFor="name">Event name</Label>
-              <Input id="name" name="name" required />
+              <Input id="name" name="name" required className="h-8 text-[13px]" />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="organisation_id">Client</Label>
               <select
                 id="organisation_id"
                 name="organisation_id"
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px]"
               >
                 <option value="">No client / internal</option>
                 {organisations?.map((org) => (
@@ -48,40 +47,42 @@ export default async function NewEventPage() {
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
                 <Label htmlFor="venue">Venue</Label>
-                <Input id="venue" name="venue" />
+                <Input id="venue" name="venue" className="h-8 text-[13px]" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="location">Location</Label>
-                <Input id="location" name="location" />
+                <Input id="location" name="location" className="h-8 text-[13px]" />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
                 <Label htmlFor="start_date">Start date</Label>
-                <Input id="start_date" name="start_date" type="date" />
+                <Input id="start_date" name="start_date" type="date" className="h-8 text-[13px]" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="end_date">End date</Label>
-                <Input id="end_date" name="end_date" type="date" />
+                <Input id="end_date" name="end_date" type="date" className="h-8 text-[13px]" />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
                 <Label htmlFor="expected_attendance">Expected attendance</Label>
-                <Input id="expected_attendance" name="expected_attendance" type="number" min={0} />
+                <Input id="expected_attendance" name="expected_attendance" type="number" min={0} className="h-8 text-[13px]" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="control_location">Control location</Label>
-                <Input id="control_location" name="control_location" />
+                <Input id="control_location" name="control_location" className="h-8 text-[13px]" />
               </div>
             </div>
 
-            <Button type="submit">Create event</Button>
+            <Button type="submit" size="sm">
+              Create event
+            </Button>
           </form>
         </CardContent>
       </Card>

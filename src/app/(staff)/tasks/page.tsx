@@ -47,22 +47,22 @@ export default async function TasksPage() {
     <div className="mx-auto max-w-6xl">
       <PageHeader title="Tasks" description="Portfolio-wide planning work and document-related actions." />
 
-      <Card className="mb-5">
+      <Card className="mb-4">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-[15px]">
-            <ListPlus className="size-4 text-tide-teal" />
+          <CardTitle className="flex items-center gap-1.5 text-[13px]">
+            <ListPlus className="size-3.5 text-tide-teal" />
             New task
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createTask} className="flex flex-wrap items-end gap-2.5">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Title</label>
-              <Input name="title" required className="w-56" />
+          <form action={createTask} className="flex flex-wrap items-end gap-2">
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-muted-foreground">Title</label>
+              <Input name="title" required className="h-8 w-56 text-[13px]" />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Event</label>
-              <select name="event_id" className="h-9 rounded-md border border-input bg-background px-3 text-sm">
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-muted-foreground">Event</label>
+              <select name="event_id" className="h-8 rounded-md border border-input bg-background px-2.5 text-[13px]">
                 <option value="">Portfolio-level</option>
                 {events?.map((e) => (
                   <option key={e.id} value={e.id}>
@@ -71,9 +71,9 @@ export default async function TasksPage() {
                 ))}
               </select>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Owner</label>
-              <select name="owner_id" className="h-9 rounded-md border border-input bg-background px-3 text-sm">
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-muted-foreground">Owner</label>
+              <select name="owner_id" className="h-8 rounded-md border border-input bg-background px-2.5 text-[13px]">
                 <option value="">Unassigned</option>
                 {staffDirectory?.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -82,18 +82,18 @@ export default async function TasksPage() {
                 ))}
               </select>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Priority</label>
-              <select name="priority" defaultValue="medium" className="h-9 rounded-md border border-input bg-background px-3 text-sm">
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-muted-foreground">Priority</label>
+              <select name="priority" defaultValue="medium" className="h-8 rounded-md border border-input bg-background px-2.5 text-[13px]">
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
                 <option value="urgent">Urgent</option>
               </select>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Due date</label>
-              <Input name="due_date" type="date" />
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-muted-foreground">Due date</label>
+              <Input name="due_date" type="date" className="h-8 text-[13px]" />
             </div>
             <Button type="submit" size="sm">
               Add task
@@ -102,27 +102,27 @@ export default async function TasksPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-4">
         {grouped.map((col) => (
           <div key={col.status} className="min-w-0">
-            <div className="mb-2.5 flex items-center gap-2 px-0.5">
-              <span className={cn("size-2 shrink-0 rounded-full", col.dot)} />
-              <h2 className="text-[13px] font-semibold text-tide-charcoal">{col.label}</h2>
-              <span className="ml-auto rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground tabular-nums">
+            <div className="mb-2 flex items-center gap-1.5 px-0.5">
+              <span className={cn("size-1.5 shrink-0 rounded-full", col.dot)} />
+              <h2 className="text-[12px] font-semibold text-tide-charcoal">{col.label}</h2>
+              <span className="ml-auto rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground tabular-nums">
                 {col.items.length}
               </span>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {col.items.map((task) => {
                 const event = task.events as { name: string } | null;
                 const owner = task.user_profiles as { full_name: string; email: string } | null;
                 return (
-                  <Card key={task.id} className="gap-2.5 py-3 transition-shadow duration-150 hover:shadow-md">
-                    <CardContent className="space-y-2.5 px-3.5">
-                      <div className="text-[13.5px] leading-snug font-medium text-tide-charcoal">{task.title}</div>
-                      <div className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
+                  <Card key={task.id} className="gap-2 py-2.5 transition-shadow duration-150 hover:shadow-md">
+                    <CardContent className="space-y-2 px-3">
+                      <div className="text-[12.5px] leading-snug font-medium text-tide-charcoal">{task.title}</div>
+                      <div className="flex items-center gap-1.5 text-[10.5px] text-muted-foreground">
                         {owner && (
-                          <span className="flex size-[18px] shrink-0 items-center justify-center rounded-full bg-tide-teal/15 text-[8.5px] font-bold text-tide-teal">
+                          <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-tide-teal/15 text-[8px] font-bold text-tide-teal">
                             {initials(owner.full_name || owner.email)}
                           </span>
                         )}
@@ -132,7 +132,7 @@ export default async function TasksPage() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between gap-2">
-                        <Badge variant="outline" className={cn("text-[10.5px]", PRIORITY_STYLES[task.priority])}>
+                        <Badge variant="outline" className={cn("text-[10px]", PRIORITY_STYLES[task.priority])}>
                           {task.priority}
                         </Badge>
                         <div className="flex items-center gap-0.5">
@@ -150,7 +150,7 @@ export default async function TasksPage() {
                 );
               })}
               {col.items.length === 0 && (
-                <div className="rounded-lg border border-dashed border-border/80 px-3 py-6 text-center text-[12px] text-muted-foreground/70">
+                <div className="rounded-md border border-dashed border-border/80 px-3 py-5 text-center text-[11px] text-muted-foreground/70">
                   Nothing here
                 </div>
               )}

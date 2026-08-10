@@ -1,3 +1,4 @@
+import { BookOpen } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createKnowledgeBlock, archiveKnowledgeBlock } from "@/lib/actions/knowledge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
 
 const CATEGORIES = [
   "Command & Communication",
@@ -23,33 +26,30 @@ export default async function KnowledgeLibraryPage() {
     .order("title");
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-tide-charcoal">Knowledge Library</h1>
-        <p className="text-sm text-muted-foreground">
-          Reusable, version-controlled operational text. Documents reference a block by id and
-          version rather than copying it — update once, it flows to every document that links it.
-        </p>
-      </div>
+    <div className="mx-auto max-w-4xl">
+      <PageHeader
+        title="Knowledge Library"
+        description="Reusable, version-controlled operational text. Documents reference a block by id and version rather than copying it — update once, it flows to every document that links it."
+      />
 
-      <Card>
+      <Card className="mb-4">
         <CardHeader>
-          <CardTitle className="text-base">New knowledge block</CardTitle>
+          <CardTitle className="text-[13px]">New knowledge block</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createKnowledgeBlock} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+          <form action={createKnowledgeBlock} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
                 <Label htmlFor="title">Title</Label>
-                <Input id="title" name="title" required />
+                <Input id="title" name="title" required className="h-8 text-[13px]" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="category">Category</Label>
                 <select
                   id="category"
                   name="category"
                   required
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px]"
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c} value={c}>
@@ -59,25 +59,34 @@ export default async function KnowledgeLibraryPage() {
                 </select>
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="content">Content</Label>
-              <Textarea id="content" name="content" rows={5} required />
+              <Textarea id="content" name="content" rows={4} required className="text-[13px]" />
             </div>
-            <Button type="submit">Add block</Button>
+            <Button type="submit" size="sm">
+              Add block
+            </Button>
           </form>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="gap-0 py-0">
         <CardContent className="divide-y p-0">
           {blocks?.length ? (
             blocks.map((b) => (
-              <div key={b.id} className="space-y-1 p-4 text-sm">
+              <div key={b.id} className="space-y-1 px-4 py-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-tide-charcoal">{b.title}</span>
-                    <Badge variant="outline">{b.category}</Badge>
-                    <Badge variant="outline" className={b.approval_status === "approved" ? "bg-emerald-100 text-emerald-800" : ""}>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[13px] font-medium text-tide-charcoal">{b.title}</span>
+                    <Badge variant="outline" className="text-[10px]">{b.category}</Badge>
+                    <Badge
+                      variant="outline"
+                      className={
+                        b.approval_status === "approved"
+                          ? "bg-success-bg text-[10px] text-success"
+                          : "text-[10px]"
+                      }
+                    >
                       {b.approval_status}
                     </Badge>
                   </div>
@@ -90,11 +99,11 @@ export default async function KnowledgeLibraryPage() {
                     </form>
                   )}
                 </div>
-                <p className="text-muted-foreground">{b.content}</p>
+                <p className="text-[12.5px] text-muted-foreground">{b.content}</p>
               </div>
             ))
           ) : (
-            <p className="p-6 text-sm text-muted-foreground">No knowledge blocks yet.</p>
+            <EmptyState icon={BookOpen} title="No knowledge blocks yet" className="border-none py-10" />
           )}
         </CardContent>
       </Card>

@@ -81,15 +81,15 @@
   --accent: #e4f3f5;
   --accent-foreground: #373536;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: #e2e2e2;
-  --input: #e2e2e2;
+  --border: #dcdcdc;
+  --input: #dcdcdc;
   --ring: #60b9c5;
   --chart-1: #60b9c5;
   --chart-2: #373536;
   --chart-3: #8fd0d9;
   --chart-4: #a6a5a6;
   --chart-5: #3d8f99;
-  --radius: 0.5rem;
+  --radius: 0.3125rem;
   --sidebar: #373536;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #60b9c5;

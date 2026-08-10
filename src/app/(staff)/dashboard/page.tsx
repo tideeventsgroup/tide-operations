@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { AlertTriangle, CalendarClock, CalendarDays, CheckCircle2, FileCheck2, ListChecks } from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, FileCheck2, ListChecks, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { EmptyState } from "@/components/empty-state";
-import { ListRow } from "@/components/list-row";
 import { StageBadge, DocumentStatusBadge } from "@/components/status-badges";
 import { Badge } from "@/components/ui/badge";
 
@@ -53,7 +53,10 @@ const PRIORITY_STYLES: Record<string, string> = {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("get_dashboard_snapshot");
+  const [{ data, error }, { count: activeEventsCount }] = await Promise.all([
+    supabase.rpc("get_dashboard_snapshot"),
+    supabase.from("events").select("id", { count: "exact", head: true }).neq("stage", "complete"),
+  ]);
   const snapshot = (data ?? {
     upcoming_events: [],
     review_queue: [],
@@ -65,16 +68,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <PageHeader
-        title="Dashboard"
-        description="Operational overview across every event you have access to."
-      />
+      <PageHeader title="Dashboard" description="Operational overview across every event you have access to." />
 
-      {error && (
-        <p className="mb-4 text-sm text-destructive">Couldn&apos;t load dashboard data: {error.message}</p>
-      )}
+      {error && <p className="mb-4 text-sm text-destructive">Couldn&apos;t load dashboard data: {error.message}</p>}
 
-      <div className="grid gap-3.5 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard label="Active events" value={activeEventsCount ?? 0} href="/events" icon={Zap} />
         <StatCard
           label="In review / needs updates"
           value={snapshot.review_queue_count}
@@ -92,115 +91,133 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card className="gap-0 py-0">
-          <CardHeader className="border-b py-4">
-            <CardTitle className="flex items-center gap-2 text-[15px]">
-              <CalendarDays className="size-4 text-tide-teal" />
+          <CardHeader className="border-b py-2.5">
+            <CardTitle className="flex items-center gap-1.5 text-[13px]">
+              <CalendarDays className="size-3.5 text-tide-teal" />
               Upcoming events
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-0 py-1">
+          <CardContent className="p-0">
             {snapshot.upcoming_events.length ? (
-              <div className="divide-y">
-                {snapshot.upcoming_events.map((event) => (
-                  <ListRow
-                    key={event.id}
-                    href={`/events/${event.id}`}
-                    icon={CalendarDays}
-                    title={event.name}
-                    subtitle={`${event.organisation_name ?? "No client"} · ${event.venue ?? "Venue TBC"}`}
-                    trailing={<StageBadge stage={event.stage} />}
-                  />
-                ))}
-              </div>
+              <Table>
+                <TableBody>
+                  {snapshot.upcoming_events.map((event) => (
+                    <TableRow key={event.id}>
+                      <TableCell className="font-medium text-tide-charcoal">
+                        <Link href={`/events/${event.id}`} className="block">
+                          {event.name}
+                        </Link>
+                        <span className="block text-[11.5px] font-normal text-muted-foreground">
+                          {event.organisation_name ?? "No client"} · {event.venue ?? "Venue TBC"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <StageBadge stage={event.stage} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             ) : (
               <EmptyState
                 icon={CalendarDays}
                 title="No upcoming events"
                 description="Events you're assigned to will appear here."
-                className="border-none"
+                className="border-none py-8"
               />
             )}
           </CardContent>
-          <div className="border-t px-4 py-2.5">
-            <Link href="/events" className="text-[13px] font-medium text-tide-teal hover:underline">
+          <div className="border-t px-3 py-2">
+            <Link href="/events" className="text-[12px] font-medium text-tide-teal hover:underline">
               View all events →
             </Link>
           </div>
         </Card>
 
         <Card className="gap-0 py-0">
-          <CardHeader className="border-b py-4">
-            <CardTitle className="flex items-center gap-2 text-[15px]">
-              <FileCheck2 className="size-4 text-tide-teal" />
+          <CardHeader className="border-b py-2.5">
+            <CardTitle className="flex items-center gap-1.5 text-[13px]">
+              <FileCheck2 className="size-3.5 text-tide-teal" />
               Review queue
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-0 py-1">
+          <CardContent className="p-0">
             {snapshot.review_queue.length ? (
-              <div className="divide-y">
-                {snapshot.review_queue.map((doc) => (
-                  <ListRow
-                    key={doc.id}
-                    href={`/documents/${doc.id}`}
-                    icon={FileCheck2}
-                    title={doc.title}
-                    subtitle={`${doc.reference ?? "Unreferenced"} · ${doc.event_name}`}
-                    trailing={<DocumentStatusBadge status={doc.status} />}
-                  />
-                ))}
-              </div>
+              <Table>
+                <TableBody>
+                  {snapshot.review_queue.map((doc) => (
+                    <TableRow key={doc.id}>
+                      <TableCell className="font-medium text-tide-charcoal">
+                        <Link href={`/documents/${doc.id}`} className="block">
+                          {doc.title}
+                        </Link>
+                        <span className="block text-[11.5px] font-normal text-muted-foreground">
+                          {doc.reference ?? "Unreferenced"} · {doc.event_name}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DocumentStatusBadge status={doc.status} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             ) : (
               <EmptyState
                 icon={CheckCircle2}
                 title="Nothing awaiting review"
                 description="Documents submitted for review will show up here."
-                className="border-none"
+                className="border-none py-8"
               />
             )}
           </CardContent>
         </Card>
 
         <Card className="gap-0 py-0 lg:col-span-2">
-          <CardHeader className="border-b py-4">
-            <CardTitle className="flex items-center gap-2 text-[15px]">
-              <ListChecks className="size-4 text-tide-teal" />
+          <CardHeader className="border-b py-2.5">
+            <CardTitle className="flex items-center gap-1.5 text-[13px]">
+              <ListChecks className="size-3.5 text-tide-teal" />
               My open tasks
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-0 py-1">
+          <CardContent className="p-0">
             {snapshot.my_open_tasks.length ? (
-              <div className="divide-y">
-                {snapshot.my_open_tasks.map((task) => (
-                  <ListRow
-                    key={task.id}
-                    href="/tasks"
-                    icon={CalendarClock}
-                    title={task.title}
-                    subtitle={
-                      task.event_name
-                        ? `${task.event_name}${task.due_date ? ` · Due ${task.due_date}` : ""}`
-                        : `Portfolio-level${task.due_date ? ` · Due ${task.due_date}` : ""}`
-                    }
-                    trailing={
-                      <Badge variant="outline" className={PRIORITY_STYLES[task.priority]}>
-                        {task.priority}
-                      </Badge>
-                    }
-                  />
-                ))}
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Task</TableHead>
+                    <TableHead>Event</TableHead>
+                    <TableHead>Due</TableHead>
+                    <TableHead className="text-right">Priority</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {snapshot.my_open_tasks.map((task) => (
+                    <TableRow key={task.id}>
+                      <TableCell className="font-medium text-tide-charcoal">
+                        <Link href="/tasks" className="block">
+                          {task.title}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{task.event_name ?? "Portfolio"}</TableCell>
+                      <TableCell className="text-muted-foreground">{task.due_date ?? "—"}</TableCell>
+                      <TableCell className="text-right">
+                        <Badge variant="outline" className={PRIORITY_STYLES[task.priority]}>
+                          {task.priority}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             ) : (
-              <EmptyState
-                icon={ListChecks}
-                title="No open tasks assigned to you"
-                className="border-none"
-              />
+              <EmptyState icon={ListChecks} title="No open tasks assigned to you" className="border-none py-8" />
             )}
           </CardContent>
-          <div className="border-t px-4 py-2.5">
-            <Link href="/tasks" className="text-[13px] font-medium text-tide-teal hover:underline">
+          <div className="border-t px-3 py-2">
+            <Link href="/tasks" className="text-[12px] font-medium text-tide-teal hover:underline">
               View task board →
             </Link>
           </div>
