@@ -40,23 +40,26 @@ export default async function StaffLayout({ children }: { children: React.ReactN
   const displayName = profile.full_name || user.email || "";
 
   return (
-    <div className="flex min-h-screen flex-1">
-      <aside className="fixed inset-y-0 left-0 hidden w-56 flex-col bg-tide-charcoal text-white md:flex">
-        <div className="flex h-16 flex-shrink-0 flex-col justify-center gap-1.5 border-b border-white/[0.08] px-3.5">
-          <TideLogo variant="dark" height={18} />
-          <div className="truncate text-[10px] font-semibold tracking-[0.14em] text-tide-teal uppercase">
-            Operations System
+    <div className="flex min-h-screen flex-1 bg-background">
+      <a href="#main-content" className="sr-only z-[100] rounded-md bg-white px-4 py-2 font-semibold text-tide-charcoal focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
+        Skip to main content
+      </a>
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-tide-charcoal text-white shadow-[8px_0_32px_rgba(23,23,23,0.06)] md:flex">
+        <div className="flex h-[84px] flex-shrink-0 flex-col justify-center gap-2 border-b border-white/[0.08] px-5">
+          <TideLogo variant="dark" height={21} />
+          <div className="truncate text-[10px] font-bold tracking-[0.16em] text-tide-teal uppercase">
+            Business &amp; Operations
           </div>
         </div>
         <StaffSidebarNav staffRole={profile.staff_role} />
-        <div className="flex flex-shrink-0 items-center justify-between gap-2 border-t border-white/[0.08] px-2.5 py-2.5">
+        <div className="flex flex-shrink-0 items-center justify-between gap-2 border-t border-white/[0.08] px-4 py-4">
           <div className="flex min-w-0 items-center gap-2">
-            <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-tide-teal/20 text-[11px] font-bold text-tide-teal ring-1 ring-tide-teal/30">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-tide-teal/15 text-xs font-bold text-tide-teal ring-1 ring-tide-teal/25">
               {initials(displayName)}
             </div>
             <div className="min-w-0 leading-tight">
-              <div className="truncate text-sm font-medium text-white">{displayName}</div>
-              <div className="truncate text-[11.5px] text-white/45">{roleLabel}</div>
+              <div className="truncate text-[13px] font-semibold text-white">{displayName}</div>
+              <div className="truncate text-xs text-white/45">{roleLabel}</div>
             </div>
           </div>
           <form action={signOut}>
@@ -73,13 +76,13 @@ export default async function StaffLayout({ children }: { children: React.ReactN
         </div>
       </aside>
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col md:ml-56">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col md:ml-60">
         <StaffHeader
           staffRole={profile.staff_role}
           fullName={displayName}
           roleLabel={roleLabel}
         />
-        <main className="min-w-0 flex-1 overflow-x-hidden bg-[#fafafa] p-3.5 md:p-5">{children}</main>
+        <main id="main-content" className="min-w-0 flex-1 overflow-x-hidden bg-background px-4 py-6 md:px-7 md:py-8 xl:px-10 xl:py-9">{children}</main>
       </div>
     </div>
   );

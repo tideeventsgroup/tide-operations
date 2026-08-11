@@ -24,7 +24,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         <div className="relative flex flex-col items-start gap-2">
           <TideLogo variant="dark" height={30} />
           <div className="text-[12px] font-semibold tracking-[0.12em] text-tide-teal uppercase">
-            Operations System
+            Business &amp; Operations
           </div>
         </div>
 
@@ -48,7 +48,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           <div className="mb-6 flex flex-col items-start gap-1.5 lg:hidden">
             <TideLogo variant="light" height={24} />
             <div className="text-[11px] font-semibold tracking-[0.1em] text-tide-teal uppercase">
-              Operations System
+              Business &amp; Operations
             </div>
           </div>
           {children}

@@ -76,11 +76,8 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    if (isPortalRoute && profile?.account_type === "staff") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
-      return NextResponse.redirect(url);
-    }
+    // Staff may open portal routes in clearly labelled preview mode. The
+    // portal layout and database RLS continue to enforce the viewer's role.
   }
 
   return supabaseResponse;

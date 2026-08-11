@@ -66,7 +66,7 @@
   --tide-teal: #60b9c5;
   --tide-white: #ffffff;
 
-  --background: #ffffff;
+  --background: #f5f6f6;
   --foreground: #373536;
   --card: #ffffff;
   --card-foreground: #373536;
@@ -76,20 +76,20 @@
   --primary-foreground: #ffffff;
   --secondary: #eef4f5;
   --secondary-foreground: #373536;
-  --muted: #f4f4f4;
-  --muted-foreground: #6b6a6b;
-  --accent: #e4f3f5;
+  --muted: #eef0f0;
+  --muted-foreground: #676566;
+  --accent: #e7f4f6;
   --accent-foreground: #373536;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: #dcdcdc;
-  --input: #dcdcdc;
+  --border: #dfe2e2;
+  --input: #cfd4d4;
   --ring: #60b9c5;
   --chart-1: #60b9c5;
   --chart-2: #373536;
   --chart-3: #8fd0d9;
   --chart-4: #a6a5a6;
   --chart-5: #3d8f99;
-  --radius: 0.5rem;
+  --radius: 0.625rem;
   --sidebar: #373536;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #60b9c5;
@@ -159,10 +159,23 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-size: 15px;
+    line-height: 1.5;
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  button, a, input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
   ::selection {
     background: color-mix(in oklab, var(--tide-teal) 30%, transparent);
@@ -171,9 +184,15 @@
 
 @layer utilities {
   .row-interactive {
-    @apply transition-all duration-150 ease-out hover:bg-accent/50 hover:shadow-[inset_2px_0_0_var(--tide-teal)];
+    @apply transition-colors duration-150 ease-out hover:bg-accent/60;
   }
   .surface-elevated {
-    @apply shadow-[0_2px_8px_rgba(23,23,23,0.06),0_1px_2px_rgba(23,23,23,0.04)];
+    @apply shadow-[0_1px_2px_rgba(23,23,23,0.05),0_8px_24px_rgba(23,23,23,0.04)];
+  }
+  .section-label {
+    @apply text-[11px] leading-4 font-bold tracking-[0.11em] text-muted-foreground uppercase;
+  }
+  .data-value {
+    @apply font-semibold tracking-[-0.015em] text-tide-charcoal tabular-nums;
   }
 }

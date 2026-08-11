@@ -14,6 +14,152 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_opportunities: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          estimated_value: number
+          event_id: string | null
+          expected_close_date: string | null
+          id: string
+          lost_reason: string | null
+          name: string
+          notes: string | null
+          opportunity_reference: string
+          organisation_id: string
+          owner_id: string | null
+          probability: number
+          source: string | null
+          stage: Database["public"]["Enums"]["opportunity_stage"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          estimated_value?: number
+          event_id?: string | null
+          expected_close_date?: string | null
+          id?: string
+          lost_reason?: string | null
+          name: string
+          notes?: string | null
+          opportunity_reference?: string
+          organisation_id: string
+          owner_id?: string | null
+          probability?: number
+          source?: string | null
+          stage?: Database["public"]["Enums"]["opportunity_stage"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          estimated_value?: number
+          event_id?: string | null
+          expected_close_date?: string | null
+          id?: string
+          lost_reason?: string | null
+          name?: string
+          notes?: string | null
+          opportunity_reference?: string
+          organisation_id?: string
+          owner_id?: string | null
+          probability?: number
+          source?: string | null
+          stage?: Database["public"]["Enums"]["opportunity_stage"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_opportunities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_opportunities_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_opportunities_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "v_upcoming_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_opportunities_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_opportunities_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_services: {
+        Row: {
+          active: boolean
+          category: string
+          code: string
+          created_at: string
+          created_by: string | null
+          default_unit_price: number
+          description: string
+          id: string
+          name: string
+          tax_rate: number
+          unit_label: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          code: string
+          created_at?: string
+          created_by?: string | null
+          default_unit_price?: number
+          description: string
+          id?: string
+          name: string
+          tax_rate?: number
+          unit_label?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          default_unit_price?: number
+          description?: string
+          id?: string
+          name?: string
+          tax_rate?: number
+          unit_label?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_services_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_requests: {
         Row: {
           created_at: string
@@ -82,6 +228,94 @@ export type Database = {
           {
             foreignKeyName: "client_requests_raised_by_fkey"
             columns: ["raised_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_activity: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          from_status: string | null
+          id: string
+          note: string | null
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_activity_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_terms_templates: {
+        Row: {
+          active: boolean
+          body: string
+          created_at: string
+          created_by: string | null
+          document_kind: string
+          id: string
+          is_default: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          created_at?: string
+          created_by?: string | null
+          document_kind?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          document_kind?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_terms_templates_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
@@ -1268,6 +1502,161 @@ export type Database = {
           },
         ]
       }
+      invoice_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          position: number
+          quantity: number
+          tax_rate: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          position?: number
+          quantity?: number
+          tax_rate?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          position?: number
+          quantity?: number
+          tax_rate?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount_paid: number
+          balance_due: number
+          client_visible: boolean
+          created_at: string
+          created_by: string | null
+          currency: string
+          due_date: string | null
+          event_id: string | null
+          id: string
+          invoice_reference: string
+          issue_date: string
+          notes: string | null
+          organisation_id: string
+          paid_at: string | null
+          payment_terms: string | null
+          quote_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          subtotal: number
+          tax_total: number
+          title: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number
+          balance_due?: number
+          client_visible?: boolean
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          event_id?: string | null
+          id?: string
+          invoice_reference?: string
+          issue_date?: string
+          notes?: string | null
+          organisation_id: string
+          paid_at?: string | null
+          payment_terms?: string | null
+          quote_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal?: number
+          tax_total?: number
+          title: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number
+          balance_due?: number
+          client_visible?: boolean
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          event_id?: string | null
+          id?: string
+          invoice_reference?: string
+          issue_date?: string
+          notes?: string | null
+          organisation_id?: string
+          paid_at?: string | null
+          payment_terms?: string | null
+          quote_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal?: number
+          tax_total?: number
+          title?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "v_upcoming_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_blocks: {
         Row: {
           approval_status: Database["public"]["Enums"]["knowledge_block_approval_status"]
@@ -1605,6 +1994,386 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          external_reference: string | null
+          id: string
+          invoice_id: string
+          method: Database["public"]["Enums"]["payment_method"]
+          notes: string | null
+          paid_on: string
+          payment_reference: string
+          recorded_by: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          external_reference?: string | null
+          id?: string
+          invoice_id: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          notes?: string | null
+          paid_on?: string
+          payment_reference?: string
+          recorded_by?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          external_reference?: string | null
+          id?: string
+          invoice_id?: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          notes?: string | null
+          paid_on?: string
+          payment_reference?: string
+          recorded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposal_services: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          position: number
+          proposal_id: string
+          service_id: string | null
+          service_name: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          position?: number
+          proposal_id: string
+          service_id?: string | null
+          service_name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          position?: number
+          proposal_id?: string
+          service_id?: string | null
+          service_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_services_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "business_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposals: {
+        Row: {
+          accepted_at: string | null
+          accepted_by_name: string | null
+          assumptions: string | null
+          client_visible: boolean
+          created_at: string
+          created_by: string | null
+          document_id: string | null
+          event_id: string | null
+          id: string
+          opportunity_id: string | null
+          organisation_id: string
+          proposal_reference: string
+          quote_id: string | null
+          scope: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["proposal_status"]
+          summary: string | null
+          terms: string | null
+          title: string
+          updated_at: string
+          valid_until: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by_name?: string | null
+          assumptions?: string | null
+          client_visible?: boolean
+          created_at?: string
+          created_by?: string | null
+          document_id?: string | null
+          event_id?: string | null
+          id?: string
+          opportunity_id?: string | null
+          organisation_id: string
+          proposal_reference?: string
+          quote_id?: string | null
+          scope?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["proposal_status"]
+          summary?: string | null
+          terms?: string | null
+          title: string
+          updated_at?: string
+          valid_until?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by_name?: string | null
+          assumptions?: string | null
+          client_visible?: boolean
+          created_at?: string
+          created_by?: string | null
+          document_id?: string | null
+          event_id?: string | null
+          id?: string
+          opportunity_id?: string | null
+          organisation_id?: string
+          proposal_reference?: string
+          quote_id?: string | null
+          scope?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["proposal_status"]
+          summary?: string | null
+          terms?: string | null
+          title?: string
+          updated_at?: string
+          valid_until?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "v_review_queue"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "v_upcoming_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "business_opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          position: number
+          quantity: number
+          quote_id: string
+          tax_rate: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          position?: number
+          quantity?: number
+          quote_id: string
+          tax_rate?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          position?: number
+          quantity?: number
+          quote_id?: string
+          tax_rate?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          accepted_at: string | null
+          accepted_by_name: string | null
+          client_visible: boolean
+          created_at: string
+          created_by: string | null
+          currency: string
+          event_id: string | null
+          id: string
+          issue_date: string
+          notes: string | null
+          opportunity_id: string | null
+          organisation_id: string
+          quote_reference: string
+          status: Database["public"]["Enums"]["quote_status"]
+          subtotal: number
+          tax_total: number
+          terms: string | null
+          title: string
+          total: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by_name?: string | null
+          client_visible?: boolean
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          event_id?: string | null
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          opportunity_id?: string | null
+          organisation_id: string
+          quote_reference?: string
+          status?: Database["public"]["Enums"]["quote_status"]
+          subtotal?: number
+          tax_total?: number
+          terms?: string | null
+          title: string
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by_name?: string | null
+          client_visible?: boolean
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          event_id?: string | null
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          opportunity_id?: string | null
+          organisation_id?: string
+          quote_reference?: string
+          status?: Database["public"]["Enums"]["quote_status"]
+          subtotal?: number
+          tax_total?: number
+          terms?: string | null
+          title?: string
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "v_upcoming_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "business_opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -2054,6 +2823,15 @@ export type Database = {
       }
     }
     Views: {
+      v_commercial_overview: {
+        Row: {
+          outstanding_invoices: number | null
+          overdue_invoices: number | null
+          quotes_awaiting_decision: number | null
+          weighted_pipeline: number | null
+        }
+        Relationships: []
+      }
       v_open_tasks: {
         Row: {
           due_date: string | null
@@ -2169,6 +2947,11 @@ export type Database = {
       }
     }
     Functions: {
+      accept_client_proposal: {
+        Args: { p_proposal_id: string }
+        Returns: undefined
+      }
+      accept_client_quote: { Args: { p_quote_id: string }; Returns: undefined }
       current_profile_account_type: {
         Args: never
         Returns: Database["public"]["Enums"]["account_type"]
@@ -2250,8 +3033,37 @@ export type Database = {
       incident_log_entry_type: "update" | "decision" | "action" | "correction"
       incident_severity: "minor" | "moderate" | "serious" | "critical"
       incident_status: "open" | "monitoring" | "resolved" | "closed"
+      invoice_status:
+        | "draft"
+        | "sent"
+        | "part_paid"
+        | "paid"
+        | "overdue"
+        | "void"
       knowledge_block_approval_status: "draft" | "approved" | "superseded"
       milestone_status: "not_started" | "on_track" | "at_risk" | "complete"
+      opportunity_stage:
+        | "lead"
+        | "qualified"
+        | "proposal"
+        | "negotiation"
+        | "won"
+        | "lost"
+      payment_method: "bank_transfer" | "card" | "cash" | "cheque" | "other"
+      proposal_status:
+        | "draft"
+        | "sent"
+        | "viewed"
+        | "accepted"
+        | "declined"
+        | "expired"
+      quote_status:
+        | "draft"
+        | "sent"
+        | "accepted"
+        | "declined"
+        | "expired"
+        | "superseded"
       radio_message_direction: "inbound" | "outbound" | "internal"
       relationship_status: "prospect" | "active" | "past"
       staff_role: "admin" | "manager" | "control_room" | "field"
@@ -2417,8 +3229,34 @@ export const Constants = {
       incident_log_entry_type: ["update", "decision", "action", "correction"],
       incident_severity: ["minor", "moderate", "serious", "critical"],
       incident_status: ["open", "monitoring", "resolved", "closed"],
+      invoice_status: ["draft", "sent", "part_paid", "paid", "overdue", "void"],
       knowledge_block_approval_status: ["draft", "approved", "superseded"],
       milestone_status: ["not_started", "on_track", "at_risk", "complete"],
+      opportunity_stage: [
+        "lead",
+        "qualified",
+        "proposal",
+        "negotiation",
+        "won",
+        "lost",
+      ],
+      payment_method: ["bank_transfer", "card", "cash", "cheque", "other"],
+      proposal_status: [
+        "draft",
+        "sent",
+        "viewed",
+        "accepted",
+        "declined",
+        "expired",
+      ],
+      quote_status: [
+        "draft",
+        "sent",
+        "accepted",
+        "declined",
+        "expired",
+        "superseded",
+      ],
       radio_message_direction: ["inbound", "outbound", "internal"],
       relationship_status: ["prospect", "active", "past"],
       staff_role: ["admin", "manager", "control_room", "field"],

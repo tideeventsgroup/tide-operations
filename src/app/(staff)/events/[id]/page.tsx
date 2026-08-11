@@ -19,6 +19,7 @@ import {
   UserPlus,
   Users,
   Users2,
+  CirclePoundSterling,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -48,6 +49,8 @@ import {
 import { EmptyState } from "@/components/empty-state";
 import { initials, cn } from "@/lib/utils";
 import { EntityReference } from "@/components/entity-reference";
+import { CommercialStatusBadge } from "@/components/commercial-status-badge";
+import { formatMoney } from "@/lib/business";
 
 const STAGES = ["enquiry", "proposal", "confirmed", "planning", "live", "complete"] as const;
 
@@ -76,6 +79,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     { data: clientRequests },
     { data: messages },
     { data: incidents },
+    { data: proposals },
+    { data: quotes },
+    { data: invoices },
   ] = await Promise.all([
     supabase
       .from("event_members")
@@ -100,6 +106,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       .select("id, incident_number, summary, severity, status, time_reported")
       .eq("event_id", id)
       .order("created_at"),
+    supabase.from("proposals").select("id, proposal_reference, title, status, client_visible").eq("event_id", id).order("created_at", { ascending: false }),
+    supabase.from("quotes").select("id, quote_reference, title, status, total, client_visible").eq("event_id", id).order("created_at", { ascending: false }),
+    supabase.from("invoices").select("id, invoice_reference, title, status, total, balance_due, client_visible").eq("event_id", id).order("created_at", { ascending: false }),
   ]);
 
   const { data: documentTypes } = await supabase
@@ -112,108 +121,125 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const currentStageIndex = STAGES.indexOf(event.stage);
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-[1480px]">
       <Link
         href="/events"
-        className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-tide-charcoal"
+        className="mb-5 inline-flex min-h-9 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-tide-charcoal"
       >
-        <ArrowLeft className="size-3.5" />
-        Events
+        <ArrowLeft className="size-4" />
+        All events
       </Link>
 
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-[19px] leading-tight font-bold tracking-tight text-tide-charcoal">{event.name}</h1>
-            <StageBadge stage={event.stage} />
+      <section className="relative mb-6 overflow-hidden rounded-2xl bg-tide-charcoal text-white shadow-[0_18px_48px_rgba(55,53,54,0.12)]">
+        <div className="pointer-events-none absolute -top-32 -right-20 size-80 rounded-full border border-tide-teal/15" />
+        <div className="relative p-5 sm:p-7 lg:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-5">
+            <div className="min-w-0 max-w-4xl">
+              <div className="mb-3 flex flex-wrap items-center gap-2.5">
+                <span className="text-[11px] font-bold tracking-[0.12em] text-tide-teal uppercase">Event workspace</span>
+                <StageBadge stage={event.stage} />
+              </div>
+              <h1 className="text-[1.85rem] leading-[1.1] font-semibold tracking-[-0.035em] text-white sm:text-[2.5rem]">{event.name}</h1>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <EntityReference label="Event ID" value={event.event_reference} inverse />
+                <EntityReference label="Client ID" value={organisation?.client_reference} inverse />
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/65">
+                <span className="inline-flex items-center gap-1.5"><Users2 className="size-4 text-tide-teal" />{orgName ?? "No client"}</span>
+                <span className="inline-flex items-center gap-1.5"><MapPin className="size-4 text-tide-teal" />{event.venue ?? "Venue TBC"}</span>
+                {event.start_date && <span className="inline-flex items-center gap-1.5"><CalendarDays className="size-4 text-tide-teal" />{event.start_date}{event.end_date ? ` – ${event.end_date}` : ""}</span>}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button render={<Link href={`/incidents/control/${id}`} />} nativeButton={false} className="bg-tide-teal text-tide-charcoal shadow-none hover:bg-[#77c5cf]">
+                <Radio className="size-4" /> Event control
+              </Button>
+              <Button render={<Link href={`/events/${id}/edit`} />} nativeButton={false} variant="outline" className="border-white/20 bg-white/[0.06] text-white hover:border-white/30 hover:bg-white/10 hover:text-white">
+                <Pencil className="size-4" /> Edit details
+              </Button>
+            </div>
           </div>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            <EntityReference label="Event ID" value={event.event_reference} />
-            <EntityReference label="Client ID" value={organisation?.client_reference} />
+          <div className="mt-8 border-t border-white/10 pt-5">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="text-[11px] font-bold tracking-[0.12em] text-white/45 uppercase">Event lifecycle</p>
+              <p className="text-xs text-white/45">Select a stage to update</p>
+            </div>
+            <div className="overflow-x-auto pb-1">
+              <div className="flex min-w-[520px] items-center">
+                {STAGES.map((stage, i) => {
+                  const done = i < currentStageIndex;
+                  const current = i === currentStageIndex;
+                  return (
+                    <div key={stage} className="flex flex-1 items-center last:flex-initial">
+                      <form action={updateEventStage} className="flex flex-col items-center gap-1">
+                        <input type="hidden" name="id" value={id} />
+                        <input type="hidden" name="stage" value={stage} />
+                        <button
+                          type="submit"
+                          disabled={current}
+                          className={cn(
+                            "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors duration-150",
+                            current
+                              ? "bg-tide-teal text-tide-charcoal ring-4 ring-tide-teal/15"
+                              : done
+                                ? "bg-tide-teal/15 text-tide-teal hover:bg-tide-teal/25"
+                                : "bg-white/[0.08] text-white/45 hover:bg-white/[0.14]",
+                          )}
+                          title={done ? `Revert to ${stage}` : `Advance to ${stage}`}
+                        >
+                          {done ? <Check className="size-3" strokeWidth={3} /> : i + 1}
+                        </button>
+                        <span
+                          className={cn(
+                            "text-[11px] font-medium whitespace-nowrap",
+                            current ? "text-white" : "text-white/45",
+                          )}
+                        >
+                          {stage[0].toUpperCase() + stage.slice(1)}
+                        </span>
+                      </form>
+                      {i < STAGES.length - 1 && (
+                        <div className={cn("mx-2 h-px flex-1", done ? "bg-tide-teal/50" : "bg-white/12")} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {orgName ?? "No client"} · {event.venue ?? "Venue TBC"}
-            {event.start_date ? ` · ${event.start_date}${event.end_date ? ` – ${event.end_date}` : ""}` : ""}
-          </p>
         </div>
-        <Button render={<Link href={`/events/${id}/edit`} />} nativeButton={false} variant="outline" size="sm">
-          <Pencil className="size-3.5" />
-          Edit details
-        </Button>
-      </div>
-
-      <Card className="mb-4">
-        <CardContent className="py-3">
-          <div className="flex items-center">
-            {STAGES.map((stage, i) => {
-              const done = i < currentStageIndex;
-              const current = i === currentStageIndex;
-              return (
-                <div key={stage} className="flex flex-1 items-center last:flex-initial">
-                  <form action={updateEventStage} className="flex flex-col items-center gap-1">
-                    <input type="hidden" name="id" value={id} />
-                    <input type="hidden" name="stage" value={stage} />
-                    <button
-                      type="submit"
-                      disabled={current}
-                      className={cn(
-                        "flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-colors duration-150",
-                        current
-                          ? "bg-tide-teal text-white ring-3 ring-tide-teal/20"
-                          : done
-                            ? "bg-tide-teal/15 text-tide-teal hover:bg-tide-teal/25"
-                            : "bg-muted text-muted-foreground hover:bg-muted-foreground/15",
-                      )}
-                      title={done ? `Revert to ${stage}` : `Advance to ${stage}`}
-                    >
-                      {done ? <Check className="size-3" strokeWidth={3} /> : i + 1}
-                    </button>
-                    <span
-                      className={cn(
-                        "text-[11px] font-medium whitespace-nowrap",
-                        current ? "text-tide-charcoal" : "text-muted-foreground",
-                      )}
-                    >
-                      {stage[0].toUpperCase() + stage.slice(1)}
-                    </span>
-                  </form>
-                  {i < STAGES.length - 1 && (
-                    <div className={cn("mx-1 h-0.5 flex-1 rounded-full", done ? "bg-tide-teal/30" : "bg-muted")} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+      </section>
 
       <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="milestones">Milestones &amp; Tasks</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="incidents">Incidents</TabsTrigger>
-          <TabsTrigger value="requests">Requests</TabsTrigger>
-          <TabsTrigger value="messages">Messages</TabsTrigger>
-        </TabsList>
+        <div className="mb-1 overflow-x-auto border-b border-border">
+          <TabsList variant="line" className="min-w-max gap-1">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="members">Members</TabsTrigger>
+            <TabsTrigger value="milestones">Milestones &amp; Tasks</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="commercial">Commercial</TabsTrigger>
+            <TabsTrigger value="incidents">Incidents</TabsTrigger>
+            <TabsTrigger value="requests">Requests</TabsTrigger>
+            <TabsTrigger value="messages">Messages</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="overview" className="space-y-3">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Event variables</CardTitle>
+              <CardTitle>Event details</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-3.5">
-              <Field icon={CalendarDays} label="event.name" value={event.name} />
-              <Field icon={MapPin} label="venue.name" value={event.venue} />
+              <Field icon={CalendarDays} label="Event Name" value={event.name} />
+              <Field icon={MapPin} label="Venue Name" value={event.venue} />
               <Field
                 icon={CalendarDays}
-                label="event.dates"
+                label="Event Dates"
                 value={event.start_date ? `${event.start_date} – ${event.end_date ?? event.start_date}` : null}
               />
-              <Field icon={Users2} label="event.expected_attendance" value={event.expected_attendance?.toString() ?? null} />
-              <Field icon={Radio} label="event.control" value={event.control_location} />
-              <Field icon={Banknote} label="event.financial_value" value={event.financial_value ? `£${event.financial_value}` : null} />
+              <Field icon={Users2} label="Expected Attendance" value={event.expected_attendance?.toString() ?? null} />
+              <Field icon={Radio} label="Event Control" value={event.control_location} />
+              <Field icon={Banknote} label="Financial Value" value={event.financial_value ? `£${event.financial_value}` : null} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -508,6 +534,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           </Card>
         </TabsContent>
 
+        <TabsContent value="commercial" className="space-y-3">
+          <div className="grid gap-4 xl:grid-cols-3">
+            <Card className="gap-0 py-0"><CardHeader className="flex-row items-center justify-between border-b py-3.5"><CardTitle>Proposals</CardTitle><Button render={<Link href="/business/proposals/new" />} nativeButton={false} size="sm" variant="outline">New</Button></CardHeader><CardContent className="p-0">{proposals?.length ? proposals.map((record) => <Link key={record.id} href={`/business/proposals/${record.id}`} className="flex items-center justify-between gap-3 border-b px-4 py-3 last:border-0"><span><strong className="block text-sm">{record.title}</strong><small className="text-muted-foreground">{record.proposal_reference}{record.client_visible ? " · Portal" : ""}</small></span><CommercialStatusBadge status={record.status} /></Link>) : <EmptyState icon={FileText} title="No proposals" className="border-none py-8" />}</CardContent></Card>
+            <Card className="gap-0 py-0"><CardHeader className="flex-row items-center justify-between border-b py-3.5"><CardTitle>Quotes</CardTitle><Button render={<Link href="/business/quotes/new" />} nativeButton={false} size="sm" variant="outline">New</Button></CardHeader><CardContent className="p-0">{quotes?.length ? quotes.map((record) => <Link key={record.id} href={`/business/quotes/${record.id}`} className="flex items-center justify-between gap-3 border-b px-4 py-3 last:border-0"><span><strong className="block text-sm">{record.quote_reference}</strong><small className="text-muted-foreground">{formatMoney(record.total)}{record.client_visible ? " · Portal" : ""}</small></span><CommercialStatusBadge status={record.status} /></Link>) : <EmptyState icon={CirclePoundSterling} title="No quotes" className="border-none py-8" />}</CardContent></Card>
+            <Card className="gap-0 py-0"><CardHeader className="flex-row items-center justify-between border-b py-3.5"><CardTitle>Invoices</CardTitle><Button render={<Link href="/business/invoices/new" />} nativeButton={false} size="sm" variant="outline">New</Button></CardHeader><CardContent className="p-0">{invoices?.length ? invoices.map((record) => <Link key={record.id} href={`/business/invoices/${record.id}`} className="flex items-center justify-between gap-3 border-b px-4 py-3 last:border-0"><span><strong className="block text-sm">{record.invoice_reference}</strong><small className="text-muted-foreground">{formatMoney(record.balance_due)} due{record.client_visible ? " · Portal" : ""}</small></span><CommercialStatusBadge status={record.status} /></Link>) : <EmptyState icon={Banknote} title="No invoices" className="border-none py-8" />}</CardContent></Card>
+          </div>
+        </TabsContent>
+
         <TabsContent value="incidents" className="space-y-3">
           <Card className="gap-0 py-0">
             <CardHeader className="flex-row items-center justify-between border-b py-2.5">
@@ -687,7 +721,7 @@ function Field({
         <Icon className="size-3" strokeWidth={2} />
       </div>
       <div className="min-w-0">
-        <div className="font-mono text-[11px] text-tide-teal">{label}</div>
+        <div className="text-xs font-semibold text-muted-foreground">{label}</div>
         <div className="truncate text-sm font-medium text-tide-charcoal">{value || "—"}</div>
       </div>
     </div>

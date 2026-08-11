@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Building2, CalendarDays, Trash2, UserPlus, Users } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, Building2, CalendarDays, Plus, Trash2, UserPlus, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { updateOrganisation, createContact, deleteContact } from "@/lib/actions/clients";
 import { Button } from "@/components/ui/button";
@@ -14,15 +14,20 @@ import { EmptyState } from "@/components/empty-state";
 import { StageBadge } from "@/components/status-badges";
 import { initials } from "@/lib/utils";
 import { EntityReference } from "@/components/entity-reference";
+import { CommercialStatusBadge } from "@/components/commercial-status-badge";
+import { formatMoney } from "@/lib/business";
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: org }, { data: contacts }, { data: events }] = await Promise.all([
+  const [{ data: org }, { data: contacts }, { data: events }, { data: opportunities }, { data: quotes }, { data: invoices }] = await Promise.all([
     supabase.from("organisations").select("*").eq("id", id).maybeSingle(),
     supabase.from("contacts").select("*").eq("organisation_id", id).order("is_primary", { ascending: false }),
     supabase.from("events").select("id, event_reference, name, stage, start_date").eq("organisation_id", id).order("start_date", { ascending: false }),
+    supabase.from("business_opportunities").select("id, opportunity_reference, name, stage, estimated_value").eq("organisation_id", id).order("created_at", { ascending: false }),
+    supabase.from("quotes").select("id, quote_reference, title, status, total").eq("organisation_id", id).order("created_at", { ascending: false }),
+    supabase.from("invoices").select("id, invoice_reference, title, status, balance_due").eq("organisation_id", id).order("created_at", { ascending: false }),
   ]);
 
   if (!org) notFound();
@@ -211,6 +216,18 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             ) : (
               <EmptyState icon={CalendarDays} title="No events linked yet" className="border-none py-8" />
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="gap-0 py-0">
+          <CardHeader className="flex-row items-center justify-between border-b py-3.5">
+            <CardTitle className="flex items-center gap-1.5 text-sm"><BriefcaseBusiness className="size-3.5 text-tide-teal" />Commercial history</CardTitle>
+            <Button render={<Link href="/business/opportunities/new" />} nativeButton={false} size="sm" variant="outline"><Plus />Opportunity</Button>
+          </CardHeader>
+          <CardContent className="grid gap-px bg-border p-0 md:grid-cols-3">
+            <section className="bg-white p-4"><p className="section-label mb-3">Opportunities</p><div className="space-y-3">{opportunities?.length ? opportunities.slice(0, 5).map((record) => <Link key={record.id} href={`/business/opportunities/${record.id}`} className="flex items-center justify-between gap-2"><span><strong className="block text-sm">{record.name}</strong><small className="text-muted-foreground">{formatMoney(record.estimated_value)}</small></span><CommercialStatusBadge status={record.stage} /></Link>) : <p className="text-sm text-muted-foreground">No opportunities</p>}</div></section>
+            <section className="bg-white p-4"><p className="section-label mb-3">Quotes</p><div className="space-y-3">{quotes?.length ? quotes.slice(0, 5).map((record) => <Link key={record.id} href={`/business/quotes/${record.id}`} className="flex items-center justify-between gap-2"><span><strong className="block text-sm">{record.quote_reference}</strong><small className="text-muted-foreground">{formatMoney(record.total)}</small></span><CommercialStatusBadge status={record.status} /></Link>) : <p className="text-sm text-muted-foreground">No quotes</p>}</div></section>
+            <section className="bg-white p-4"><p className="section-label mb-3">Invoices</p><div className="space-y-3">{invoices?.length ? invoices.slice(0, 5).map((record) => <Link key={record.id} href={`/business/invoices/${record.id}`} className="flex items-center justify-between gap-2"><span><strong className="block text-sm">{record.invoice_reference}</strong><small className="text-muted-foreground">{formatMoney(record.balance_due)} due</small></span><CommercialStatusBadge status={record.status} /></Link>) : <p className="text-sm text-muted-foreground">No invoices</p>}</div></section>
           </CardContent>
         </Card>
       </div>

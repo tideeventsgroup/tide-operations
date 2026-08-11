@@ -18,21 +18,21 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
       href={item.href}
       onClick={onNavigate}
       className={cn(
-        "group relative flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors duration-150",
+        "group relative flex min-h-10 items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition-colors duration-150",
         active
-          ? "bg-white/[0.08] text-white"
-          : "text-white/55 hover:bg-white/[0.05] hover:text-white/90",
+          ? "bg-white/[0.09] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
+          : "text-white/58 hover:bg-white/[0.05] hover:text-white/90",
       )}
     >
       <span
         className={cn(
-          "absolute top-1/2 left-0 h-4 w-[3px] -translate-y-1/2 rounded-full bg-tide-teal transition-opacity duration-150",
+          "absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-tide-teal transition-opacity duration-150",
           active ? "opacity-100" : "opacity-0",
         )}
       />
       <Icon
         className={cn(
-          "size-[15px] shrink-0 transition-colors duration-150",
+          "size-[17px] shrink-0 transition-colors duration-150",
           active ? "text-tide-teal" : "text-white/40 group-hover:text-white/70",
         )}
         strokeWidth={2}
@@ -53,15 +53,15 @@ export function StaffSidebarNav({
   const adminItems = visibleAdminNavItems(staffRole);
 
   return (
-    <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-2.5 py-3">
-      <div className="flex flex-col gap-0.5">
+    <nav aria-label="Primary navigation" className="flex flex-1 flex-col gap-6 overflow-y-auto px-3 py-5">
+      <div className="flex flex-col gap-1">
         {navItems.map((item) => (
           <NavLink key={item.href} item={item} onNavigate={onNavigate} />
         ))}
       </div>
       {adminItems.length > 0 && (
-        <div className="flex flex-col gap-0.5">
-          <div className="px-2.5 pb-1 text-[10.5px] font-semibold tracking-[0.08em] text-white/30 uppercase">
+        <div className="flex flex-col gap-1">
+          <div className="px-3 pb-1.5 text-[10px] font-bold tracking-[0.13em] text-white/32 uppercase">
             Admin
           </div>
           {adminItems.map((item) => (

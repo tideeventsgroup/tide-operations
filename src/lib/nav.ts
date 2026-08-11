@@ -7,6 +7,7 @@ import {
   Users,
   FileCog,
   Siren,
+  BriefcaseBusiness,
   type LucideIcon,
 } from "lucide-react";
 import type { Database } from "@/lib/supabase/types";
@@ -24,6 +25,7 @@ export const staffNavItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Events", href: "/events", icon: CalendarDays },
   { label: "Clients", href: "/clients", icon: Building2 },
+  { label: "Business", href: "/business", icon: BriefcaseBusiness },
   { label: "Tasks", href: "/tasks", icon: ListChecks },
   { label: "Incidents", href: "/incidents", icon: Siren },
   { label: "Knowledge Library", href: "/knowledge", icon: BookOpen },

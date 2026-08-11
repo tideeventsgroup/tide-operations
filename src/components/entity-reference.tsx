@@ -6,7 +6,7 @@ export function EntityReference({
   inverse = false,
   className,
 }: {
-  label: "Event ID" | "Client ID";
+  label: string;
   value: string | null | undefined;
   inverse?: boolean;
   className?: string;

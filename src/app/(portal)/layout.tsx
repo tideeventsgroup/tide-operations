@@ -13,40 +13,45 @@ export default async function PortalLayout({ children }: { children: React.React
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/sign-in");
+  const { data: profile } = user
+    ? await supabase
+        .from("user_profiles")
+        .select("account_type, full_name, organisations(name, client_reference)")
+        .eq("id", user.id)
+        .maybeSingle()
+    : { data: null };
 
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("account_type, full_name, organisations(name, client_reference)")
-    .eq("id", user.id)
-    .maybeSingle();
+  if (profile?.account_type === "pending") redirect("/account-pending");
 
-  if (!profile) redirect("/sign-in");
-  if (profile.account_type !== "client") redirect("/dashboard");
-
-  const organisation = profile.organisations as { name: string; client_reference: string } | null;
+  const organisation = profile?.organisations as { name: string; client_reference: string } | null;
   const orgName = organisation?.name;
+  const isStaffPreview = profile?.account_type !== "client";
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#fafafa]">
-      <header className="flex h-16 flex-shrink-0 items-center justify-between border-b bg-white px-4 md:px-8">
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="flex h-[72px] flex-shrink-0 items-center justify-between border-b border-white/10 bg-tide-charcoal px-4 text-white md:px-8">
         <Link href="/portal" className="flex items-center gap-3">
-          <TideLogo variant="light" height={22} />
-          <span className="hidden text-sm font-medium text-muted-foreground sm:inline">
+          <TideLogo variant="dark" height={22} />
+          <span className="hidden border-l border-white/15 pl-3 text-sm font-semibold text-white/65 sm:inline">
             Client portal{orgName ? ` · ${orgName}` : ""}
           </span>
-          <EntityReference label="Client ID" value={organisation?.client_reference} className="hidden sm:inline-flex" />
+          {isStaffPreview && (
+            <span className="rounded-full bg-tide-teal px-2.5 py-1 text-[10px] font-bold tracking-[0.08em] text-tide-charcoal uppercase">
+              Staff preview
+            </span>
+          )}
+          <EntityReference label="Client ID" value={organisation?.client_reference} inverse className="hidden sm:inline-flex" />
         </Link>
         <div className="flex items-center gap-3">
-          <span className="hidden text-sm text-muted-foreground sm:inline">{profile.full_name}</span>
+          <span className="hidden text-sm text-white/60 sm:inline">{profile?.full_name ?? "Portal preview"}</span>
           <form action={signOut}>
-            <Button type="submit" variant="ghost" size="icon-sm" aria-label="Sign out">
-              <LogOut className="size-4 text-muted-foreground" />
+            <Button type="submit" variant="ghost" size="icon-sm" aria-label="Sign out" className="text-white/60 hover:bg-white/10 hover:text-white">
+              <LogOut className="size-4" />
             </Button>
           </form>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-7 md:px-8 md:py-10">{children}</main>
     </div>
   );
 }

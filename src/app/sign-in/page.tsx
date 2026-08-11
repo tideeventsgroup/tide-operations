@@ -17,7 +17,7 @@ export default async function SignInPage({
     <AuthShell>
       <h1 className="text-2xl font-bold tracking-tight text-tide-charcoal">Sign in</h1>
       <p className="mt-1 mb-6 text-sm text-muted-foreground">
-        Staff &amp; client access to the Tide Operations System.
+        Staff &amp; client access to the Tide Business &amp; Operations System.
       </p>
 
       {params.error && (

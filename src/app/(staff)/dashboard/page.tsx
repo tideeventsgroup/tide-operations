@@ -98,13 +98,13 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <PageHeader title="Dashboard" description="Operational overview across every event you have access to." />
+    <div className="mx-auto max-w-[1480px]">
+      <PageHeader eyebrow="Operations" title="Command overview" description="Your nearest event, immediate actions, and portfolio status in one place." />
 
       {error && <p className="mb-4 text-sm text-destructive">Couldn&apos;t load dashboard data: {error.message}</p>}
 
       {nextEvent ? (
-        <div className="mb-5">
+        <div className="mb-6">
           <NextEventCard event={nextEvent} openTaskCount={nextEventOpenTasks} reviewCount={nextEventReviewCount} />
         </div>
       ) : (
@@ -112,11 +112,11 @@ export default async function DashboardPage() {
           icon={CalendarDays}
           title="No upcoming events"
           description="Events you're assigned to will appear here as soon as they're scheduled."
-          className="mb-5"
+          className="mb-6"
         />
       )}
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
         <StatCard label="Active events" value={activeEventsCount ?? 0} href="/events" icon={Zap} />
         <StatCard
           label="In review / needs updates"
@@ -135,11 +135,11 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="mt-6 grid gap-5 xl:grid-cols-2">
         <Card className="gap-0 py-0">
-          <CardHeader className="border-b py-2.5">
-            <CardTitle className="flex items-center gap-1.5 text-sm">
-              <CalendarDays className="size-3.5 text-tide-teal" />
+          <CardHeader className="border-b py-4">
+            <CardTitle className="flex items-center gap-2">
+              <CalendarDays className="size-4 text-tide-teal" />
               Then coming up
             </CardTitle>
           </CardHeader>
@@ -177,7 +177,7 @@ export default async function DashboardPage() {
               />
             )}
           </CardContent>
-          <div className="border-t px-3 py-2">
+          <div className="border-t px-5 py-3.5">
             <Link href="/events" className="text-sm font-medium text-tide-teal hover:underline">
               View all events →
             </Link>
@@ -185,9 +185,9 @@ export default async function DashboardPage() {
         </Card>
 
         <Card className="gap-0 py-0">
-          <CardHeader className="border-b py-2.5">
-            <CardTitle className="flex items-center gap-1.5 text-sm">
-              <FileCheck2 className="size-3.5 text-tide-teal" />
+          <CardHeader className="border-b py-4">
+            <CardTitle className="flex items-center gap-2">
+              <FileCheck2 className="size-4 text-tide-teal" />
               Review queue
             </CardTitle>
           </CardHeader>
@@ -224,10 +224,10 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="gap-0 py-0 lg:col-span-2">
-          <CardHeader className="border-b py-2.5">
-            <CardTitle className="flex items-center gap-1.5 text-sm">
-              <ListChecks className="size-3.5 text-tide-teal" />
+        <Card className="gap-0 py-0 xl:col-span-2">
+          <CardHeader className="border-b py-4">
+            <CardTitle className="flex items-center gap-2">
+              <ListChecks className="size-4 text-tide-teal" />
               My open tasks
             </CardTitle>
           </CardHeader>
@@ -268,7 +268,7 @@ export default async function DashboardPage() {
               <EmptyState icon={ListChecks} title="No open tasks assigned to you" className="border-none py-8" />
             )}
           </CardContent>
-          <div className="border-t px-3 py-2">
+          <div className="border-t px-5 py-3.5">
             <Link href="/tasks" className="text-sm font-medium text-tide-teal hover:underline">
               View task board →
             </Link>

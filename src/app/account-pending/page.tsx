@@ -13,7 +13,7 @@ export default function AccountPendingPage() {
         <h1 className="text-2xl font-bold tracking-tight text-tide-charcoal">Account pending</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Your account has been created but has no permissions yet. An administrator needs to
-          assign you a role before you can access the Tide Operations System.
+          assign you a role before you can access the Tide Business &amp; Operations System.
         </p>
         <form action={signOut} className="mt-6">
           <Button type="submit" variant="outline">

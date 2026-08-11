@@ -1,13 +1,15 @@
-# Tide Operations System
+# Tide Business & Operations System
 
-Tide Events Group Scotland's event-operations platform — planning, controlled
-document management, client collaboration, and live incident control. Built
+Tide Events Group Scotland's central operating platform — CRM and pipeline,
+proposals, quotes, invoices, payments, event planning, controlled document
+management, client collaboration, and live incident control. Built
 from the Technical Architecture Specification (v0.1, 10 Aug 2026), with the
 document system adapted to a simpler uploaded-file model at the client's
 request.
 
-The complete roadmap is implemented: foundation and planning tools, document
-control, a client portal, and live incident management. Staff upload a file
+The commercial and operational spine is implemented: business development,
+financial workflow, foundation and planning tools, document control, a client
+portal, and live incident management. Staff upload a file
 against a document type and event; the platform owns the reference number,
 version history, client visibility, and Draft → In review → Needs updates →
 Approved → Issued → Archived workflow around it.
@@ -108,6 +110,23 @@ comments for detail):
   portal-enabled events belonging to their organisation, client-visible
   milestones and documents, their own requests, and messages explicitly
   shared with the client (`0012_client_portal.sql`).
+- **Commercial records retain Client ID and Event ID end-to-end.** Opportunities,
+  proposals, quotations, invoices and payments use permanent atomic references
+  (`TEG-OPP`, `TEG-PRP`, `TEG-QTE`, `TEG-INV`, `TEG-PAY`). Database triggers
+  calculate VAT/totals and reconcile invoice balances from payment records.
+  RLS keeps drafts internal; staff explicitly publish client-visible records.
+  Client acceptance is handled by narrow, validated RPCs and every status
+  transition is written to the commercial activity history.
+- **Commercial documents use one governed Tide library.** Managers maintain
+  the reusable service catalogue, default pricing, units, VAT rates and a
+  comprehensive standard terms template at `/business/library`. Proposals,
+  quotes and invoices snapshot editable terms and service descriptions so an
+  issued record does not silently change when the library is updated. Branded
+  A4 PDFs include the Tide logo, permanent Client/Event/Document IDs, itemised
+  VAT, acceptance/payment information, full terms and repeating page numbers;
+  staff and authorised portal clients can download them through an RLS-backed
+  route. The bundled terms are an operational template and require review by a
+  Scottish solicitor before production use.
 - **Events and clients have permanent correspondence IDs.** Clients receive
   `TEG-CLI-0001` references and events receive year-labelled
   `TEG-EVT-2026-0001` references. Postgres sequences and insert triggers make
@@ -134,10 +153,16 @@ is linked).
 - Restricted registration, sign-in, staff roles, and admin user management.
 - Closest-event-first operations dashboard, event lifecycle, clients,
   contacts, milestones, tasks, and knowledge library.
+- Commercial command centre with sales opportunities, weighted pipeline,
+  proposals, itemised quotes, quote-to-invoice conversion, VAT totals,
+  invoice balances, payment recording and overdue visibility. Includes an
+  editable Tide service/price library, affordable starter and planning packs,
+  full terms and conditions, and branded multi-page PDF downloads.
 - Uploaded document control with types, references, immutable versions,
   approval workflow, private storage, signed downloads, and client sharing.
 - Organisation-scoped client portal with event overview, milestones, shared
-  documents, requests, and client/staff messaging.
+  documents, published proposals and quotes, secure acceptance, invoices,
+  payment history, requests, and client/staff messaging.
 - Full event incident control: closest-event-first command dashboard, control
   sessions and role assignments, append-only event/incident logs, actions,
   decisions, resource deployment, radio traffic, operational locations,
