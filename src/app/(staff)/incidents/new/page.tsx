@@ -13,7 +13,7 @@ const CATEGORIES = ["Medical", "Crowd", "Fire", "Security", "Weather", "Infrastr
 export default async function NewIncidentPage({ searchParams }: { searchParams: Promise<{ event_id?: string }> }) {
   const { event_id: preselectedEventId } = await searchParams;
   const supabase = await createClient();
-  const { data: events } = await supabase.from("events").select("id, name, start_date").neq("stage", "complete").order("start_date");
+  const { data: events } = await supabase.from("events").select("id, event_reference, name, start_date").neq("stage", "complete").order("start_date");
   const backHref = preselectedEventId ? `/incidents/control/${preselectedEventId}` : "/incidents";
 
   return (
@@ -27,7 +27,7 @@ export default async function NewIncidentPage({ searchParams }: { searchParams: 
         <CardHeader><CardTitle className="text-base">Initial report</CardTitle></CardHeader>
         <CardContent>
           <form action={createIncident} className="space-y-5">
-            <div className="space-y-1.5"><Label htmlFor="event_id">Event</Label><select id="event_id" name="event_id" required defaultValue={preselectedEventId ?? ""} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select event…</option>{events?.map((event) => <option key={event.id} value={event.id}>{event.name} · {event.start_date ? new Date(event.start_date).toLocaleDateString("en-GB") : "Date TBC"}</option>)}</select></div>
+            <div className="space-y-1.5"><Label htmlFor="event_id">Event</Label><select id="event_id" name="event_id" required defaultValue={preselectedEventId ?? ""} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select event…</option>{events?.map((event) => <option key={event.id} value={event.id}>{event.event_reference} · {event.name} · {event.start_date ? new Date(event.start_date).toLocaleDateString("en-GB") : "Date TBC"}</option>)}</select></div>
             <div className="space-y-1.5"><Label htmlFor="summary">Incident summary</Label><Input id="summary" name="summary" required placeholder="Short factual summary" className="h-10" /></div>
             <div className="space-y-1.5"><Label htmlFor="description">Initial situation</Label><Textarea id="description" name="description" rows={4} placeholder="What happened, who is involved, immediate risks and action already taken" /></div>
             <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-1.5"><Label htmlFor="severity">Severity</Label><select id="severity" name="severity" defaultValue="minor" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="minor">Minor</option><option value="moderate">Moderate</option><option value="serious">Serious</option><option value="critical">Critical</option></select></div><div className="space-y-1.5"><Label htmlFor="category">Category</Label><select id="category" name="category" defaultValue="" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select category…</option>{CATEGORIES.map((category) => <option key={category}>{category}</option>)}</select></div></div>

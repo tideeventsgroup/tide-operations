@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/empty-state";
 import { StageBadge } from "@/components/status-badges";
 import { initials } from "@/lib/utils";
+import { EntityReference } from "@/components/entity-reference";
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,7 +22,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const [{ data: org }, { data: contacts }, { data: events }] = await Promise.all([
     supabase.from("organisations").select("*").eq("id", id).maybeSingle(),
     supabase.from("contacts").select("*").eq("organisation_id", id).order("is_primary", { ascending: false }),
-    supabase.from("events").select("id, name, stage, start_date").eq("organisation_id", id).order("start_date", { ascending: false }),
+    supabase.from("events").select("id, event_reference, name, stage, start_date").eq("organisation_id", id).order("start_date", { ascending: false }),
   ]);
 
   if (!org) notFound();
@@ -42,6 +43,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         </div>
         <div>
           <h1 className="text-[19px] leading-tight font-bold tracking-tight text-tide-charcoal">{org.name}</h1>
+          <EntityReference label="Client ID" value={org.client_reference} className="mt-1" />
           <p className="text-sm text-muted-foreground capitalize">{org.relationship_status} relationship</p>
         </div>
       </div>
@@ -196,6 +198,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                         <Link href={`/events/${e.id}`} className="block">
                           {e.name}
                         </Link>
+                        <EntityReference label="Event ID" value={e.event_reference} className="mt-1" />
                       </TableCell>
                       <TableCell className="text-muted-foreground">{e.start_date ?? "No date set"}</TableCell>
                       <TableCell className="text-right">

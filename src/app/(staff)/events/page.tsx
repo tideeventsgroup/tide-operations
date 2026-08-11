@@ -7,12 +7,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { StageBadge } from "@/components/status-badges";
+import { EntityReference } from "@/components/entity-reference";
 
 export default async function EventsPage() {
   const supabase = await createClient();
   const { data: events, error } = await supabase
     .from("events")
-    .select("id, name, venue, location, start_date, end_date, stage, expected_attendance, organisations(name)")
+    .select("id, event_reference, name, venue, location, start_date, end_date, stage, expected_attendance, organisations(name, client_reference)")
     .order("start_date", { ascending: true, nullsFirst: false });
 
   return (
@@ -51,9 +52,11 @@ export default async function EventsPage() {
                       <Link href={`/events/${event.id}`} className="block">
                         {event.name}
                       </Link>
+                      <EntityReference label="Event ID" value={event.event_reference} className="mt-1" />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {(event.organisations as { name: string } | null)?.name ?? "—"}
+                      {(event.organisations as { name: string; client_reference: string } | null)?.name ?? "—"}
+                      <EntityReference label="Client ID" value={(event.organisations as { client_reference: string } | null)?.client_reference} className="mt-1" />
                     </TableCell>
                     <TableCell className="text-muted-foreground">{event.venue ?? "TBC"}</TableCell>
                     <TableCell className="text-muted-foreground">

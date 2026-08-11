@@ -813,6 +813,7 @@ export type Database = {
           created_by: string | null
           end_date: string | null
           event_manager_id: string | null
+          event_reference: string
           expected_attendance: number | null
           financial_value: number | null
           id: string
@@ -832,6 +833,7 @@ export type Database = {
           created_by?: string | null
           end_date?: string | null
           event_manager_id?: string | null
+          event_reference?: string
           expected_attendance?: number | null
           financial_value?: number | null
           id?: string
@@ -851,6 +853,7 @@ export type Database = {
           created_by?: string | null
           end_date?: string | null
           event_manager_id?: string | null
+          event_reference?: string
           expected_attendance?: number | null
           financial_value?: number | null
           id?: string
@@ -1564,6 +1567,7 @@ export type Database = {
       }
       organisations: {
         Row: {
+          client_reference: string
           created_at: string
           created_by: string | null
           id: string
@@ -1574,6 +1578,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          client_reference?: string
           created_at?: string
           created_by?: string | null
           id?: string
@@ -1584,6 +1589,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          client_reference?: string
           created_at?: string
           created_by?: string | null
           id?: string
@@ -2053,6 +2059,7 @@ export type Database = {
           due_date: string | null
           event_id: string | null
           event_name: string | null
+          event_reference: string | null
           id: string | null
           milestone_id: string | null
           owner_id: string | null
@@ -2097,6 +2104,7 @@ export type Database = {
           current_version_id: string | null
           event_id: string | null
           event_name: string | null
+          event_reference: string | null
           id: string | null
           owner_id: string | null
           owner_name: string | null
@@ -2138,7 +2146,9 @@ export type Database = {
       }
       v_upcoming_events: {
         Row: {
+          client_reference: string | null
           end_date: string | null
+          event_reference: string | null
           id: string | null
           name: string | null
           organisation_id: string | null

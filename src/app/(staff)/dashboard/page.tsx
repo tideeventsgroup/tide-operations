@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/empty-state";
 import { StageBadge, DocumentStatusBadge } from "@/components/status-badges";
 import { Badge } from "@/components/ui/badge";
 import { NextEventCard } from "@/components/next-event-card";
+import { EntityReference } from "@/components/entity-reference";
 
 type DashboardEvent = {
   id: string;
@@ -18,6 +19,8 @@ type DashboardEvent = {
   end_date: string | null;
   stage: string;
   organisation_name: string | null;
+  event_reference: string;
+  client_reference: string | null;
 };
 
 type ReviewQueueItem = {
@@ -27,6 +30,7 @@ type ReviewQueueItem = {
   status: string;
   event_id: string | null;
   event_name: string | null;
+  event_reference: string;
 };
 
 type OpenTask = {
@@ -37,6 +41,7 @@ type OpenTask = {
   due_date: string | null;
   event_id: string | null;
   event_name: string | null;
+  event_reference: string | null;
 };
 
 type DashboardSnapshot = {
@@ -151,6 +156,10 @@ export default async function DashboardPage() {
                         <span className="block text-[12.5px] font-normal text-muted-foreground">
                           {event.organisation_name ?? "No client"} · {event.venue ?? "Venue TBC"}
                         </span>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          <EntityReference label="Event ID" value={event.event_reference} />
+                          <EntityReference label="Client ID" value={event.client_reference} />
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <StageBadge stage={event.stage} />
@@ -195,6 +204,7 @@ export default async function DashboardPage() {
                         <span className="block text-[12.5px] font-normal text-muted-foreground">
                           {doc.reference ?? "Unreferenced"} · {doc.event_name}
                         </span>
+                        <EntityReference label="Event ID" value={doc.event_reference} className="mt-1" />
                       </TableCell>
                       <TableCell className="text-right">
                         <DocumentStatusBadge status={doc.status} />
@@ -240,7 +250,10 @@ export default async function DashboardPage() {
                           {task.title}
                         </Link>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{task.event_name ?? "Portfolio"}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {task.event_name ?? "Portfolio"}
+                        <EntityReference label="Event ID" value={task.event_reference} className="mt-1" />
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{task.due_date ?? "—"}</TableCell>
                       <TableCell className="text-right">
                         <Badge variant="outline" className={PRIORITY_STYLES[task.priority]}>

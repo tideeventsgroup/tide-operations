@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { EntityReference } from "@/components/entity-reference";
 
 function formatDateTime(value: string | null) {
   return value ? new Date(value).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
@@ -37,12 +38,12 @@ export default async function IncidentDetailPage({ params }: { params: Promise<{
 
   const [{ data: viewerProfile }, { data: incident }] = await Promise.all([
     supabase.from("user_profiles").select("staff_role").eq("id", user.id).maybeSingle(),
-    supabase.from("incidents").select("*, events(id, name, venue)").eq("id", id).maybeSingle(),
+    supabase.from("incidents").select("*, events(id, event_reference, name, venue, organisations(client_reference))").eq("id", id).maybeSingle(),
   ]);
   if (!incident) notFound();
 
   const canManage = viewerProfile?.staff_role != null && ["admin", "manager", "control_room"].includes(viewerProfile.staff_role);
-  const event = incident.events as { id: string; name: string; venue: string | null } | null;
+  const event = incident.events as { id: string; event_reference: string; name: string; venue: string | null; organisations: { client_reference: string } | null } | null;
   const [
     { data: profiles },
     { data: logEntries },
@@ -78,6 +79,10 @@ export default async function IncidentDetailPage({ params }: { params: Promise<{
       </div>
 
       <div className="rounded-lg border bg-card">
+        <div className="flex flex-wrap gap-1.5 border-b bg-muted/30 px-5 py-2.5">
+          <EntityReference label="Event ID" value={event?.event_reference} />
+          <EntityReference label="Client ID" value={event?.organisations?.client_reference} />
+        </div>
         <div className="flex flex-wrap items-start justify-between gap-4 p-5">
           <div><div className="flex flex-wrap items-center gap-2"><h1 className="text-2xl font-semibold tracking-tight text-tide-charcoal">{incident.incident_number}</h1><IncidentSeverityBadge severity={incident.severity} /><IncidentStatusBadge status={incident.status} /></div><p className="mt-2 max-w-3xl text-base text-tide-charcoal">{incident.summary}</p><div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground"><span>Reported {formatDateTime(incident.time_reported)}</span>{incident.category && <span>{incident.category}</span>}{incident.location && <span className="inline-flex items-center gap-1"><MapPin className="size-3" />{incident.location}</span>}<span>Last activity {formatDateTime(incident.last_activity_at)}</span></div></div>
           <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md bg-border"><div className="min-w-24 bg-muted/50 px-4 py-3 text-center"><p className="text-xl font-semibold tabular-nums">{incident.casualty_count}</p><p className="text-[11px] text-muted-foreground">Casualties</p></div><div className="min-w-24 bg-muted/50 px-4 py-3 text-center"><p className="text-xl font-semibold tabular-nums">{openActions}</p><p className="text-[11px] text-muted-foreground">Open actions</p></div></div>

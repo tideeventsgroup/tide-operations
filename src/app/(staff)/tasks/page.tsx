@@ -31,10 +31,10 @@ export default async function TasksPage() {
     supabase
       .from("tasks")
       .select(
-        "id, title, status, priority, due_date, event_id, owner_id, events(name), user_profiles!tasks_owner_id_fkey(full_name, email)",
+        "id, title, status, priority, due_date, event_id, owner_id, events(name, event_reference), user_profiles!tasks_owner_id_fkey(full_name, email)",
       )
       .order("due_date", { ascending: true, nullsFirst: false }),
-    supabase.from("events").select("id, name").order("name"),
+    supabase.from("events").select("id, name, event_reference").order("name"),
     supabase.from("user_profiles").select("id, full_name, email").eq("account_type", "staff"),
   ]);
 
@@ -66,7 +66,7 @@ export default async function TasksPage() {
                 <option value="">Portfolio-level</option>
                 {events?.map((e) => (
                   <option key={e.id} value={e.id}>
-                    {e.name}
+                    {e.event_reference} · {e.name}
                   </option>
                 ))}
               </select>
@@ -114,7 +114,7 @@ export default async function TasksPage() {
             </div>
             <div className="space-y-1.5">
               {col.items.map((task) => {
-                const event = task.events as { name: string } | null;
+                const event = task.events as { name: string; event_reference: string } | null;
                 const owner = task.user_profiles as { full_name: string; email: string } | null;
                 return (
                   <Card key={task.id} className="gap-2 py-2.5 transition-shadow duration-150 hover:shadow-md">
@@ -127,7 +127,7 @@ export default async function TasksPage() {
                           </span>
                         )}
                         <span className="truncate">
-                          {event?.name ?? "Portfolio"}
+                          {event ? `${event.event_reference} · ${event.name}` : "Portfolio"}
                           {task.due_date ? ` · ${task.due_date}` : ""}
                         </span>
                       </div>

@@ -108,6 +108,12 @@ comments for detail):
   portal-enabled events belonging to their organisation, client-visible
   milestones and documents, their own requests, and messages explicitly
   shared with the client (`0012_client_portal.sql`).
+- **Events and clients have permanent correspondence IDs.** Clients receive
+  `TEG-CLI-0001` references and events receive year-labelled
+  `TEG-EVT-2026-0001` references. Postgres sequences and insert triggers make
+  generation atomic; update triggers make the references immutable. The IDs
+  appear throughout staff operations, Event Control, documents, exports and
+  the client portal so names are never the sole correspondence reference.
 - **Event Control is event-scoped, append-first, and realtime.** The nearest
   event leads the incident workspace. Each event has a live control session,
   command-role roster, operational locations, incident/action register,

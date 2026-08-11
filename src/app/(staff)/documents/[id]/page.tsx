@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/empty-state";
 import { FileTypeIcon } from "@/components/file-type-icon";
 import { formatFileSize } from "@/lib/file-utils";
+import { EntityReference } from "@/components/entity-reference";
 
 export default async function DocumentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,7 +19,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
 
   const { data: document } = await supabase
     .from("documents")
-    .select("*, document_types(name), events(id, name)")
+    .select("*, document_types(name), events(id, event_reference, name, organisations(client_reference))")
     .eq("id", id)
     .maybeSingle();
 
@@ -47,7 +48,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
   ]);
 
   const documentType = document.document_types as { name: string } | null;
-  const event = document.events as { id: string; name: string } | null;
+  const event = document.events as { id: string; event_reference: string; name: string; organisations: { client_reference: string } | null } | null;
 
   if (!event) notFound();
 
@@ -82,6 +83,10 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
             <p className="mt-0.5 font-mono text-[12.5px] text-muted-foreground">
               {document.reference ?? "Unreferenced"} · {documentType?.name ?? "No type"}
             </p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              <EntityReference label="Event ID" value={event.event_reference} />
+              <EntityReference label="Client ID" value={event.organisations?.client_reference} />
+            </div>
           </div>
         </div>
         {currentVersion && (

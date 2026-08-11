@@ -40,6 +40,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { EntityReference } from "@/components/entity-reference";
 
 const CONTROL_ROLES = [
   "Event Controller",
@@ -73,7 +74,7 @@ export default async function EventControlRoomPage({ params }: { params: Promise
     supabase.from("user_profiles").select("staff_role").eq("id", user.id).maybeSingle(),
     supabase
       .from("events")
-      .select("id, name, venue, start_date, end_date, stage, organisations(name)")
+      .select("id, event_reference, name, venue, start_date, end_date, stage, organisations(name, client_reference)")
       .eq("id", eventId)
       .maybeSingle(),
   ]);
@@ -140,6 +141,10 @@ export default async function EventControlRoomPage({ params }: { params: Promise
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight text-tide-charcoal">{event.name} — Event Control</h1>
             <ControlSessionBadge status={sessionStatus} />
+          </div>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            <EntityReference label="Event ID" value={event.event_reference} />
+            <EntityReference label="Client ID" value={(event.organisations as { client_reference: string } | null)?.client_reference} />
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {event.venue ?? "Venue TBC"} · {event.start_date ?? "Dates TBC"}

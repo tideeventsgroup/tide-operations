@@ -13,12 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StageBadge, DocumentStatusBadge, MilestoneStatusBadge, ClientRequestStatusBadge } from "@/components/status-badges";
 import { EmptyState } from "@/components/empty-state";
 import { initials } from "@/lib/utils";
+import { EntityReference } from "@/components/entity-reference";
 
 export default async function PortalEventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: event } = await supabase.from("events").select("*").eq("id", id).maybeSingle();
+  const { data: event } = await supabase.from("events").select("*, organisations(client_reference)").eq("id", id).maybeSingle();
   if (!event) notFound();
 
   const {
@@ -39,6 +40,7 @@ export default async function PortalEventPage({ params }: { params: Promise<{ id
       .eq("event_id", id)
       .order("created_at"),
   ]);
+  const clientReference = (event.organisations as { client_reference: string } | null)?.client_reference;
 
   return (
     <div>
@@ -55,6 +57,10 @@ export default async function PortalEventPage({ params }: { params: Promise<{ id
           <div className="flex items-center gap-2">
             <h1 className="text-2xl leading-tight font-semibold tracking-tight text-tide-charcoal">{event.name}</h1>
             <StageBadge stage={event.stage} />
+          </div>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            <EntityReference label="Event ID" value={event.event_reference} />
+            <EntityReference label="Client ID" value={clientReference} />
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {event.venue ?? "Venue TBC"}
@@ -205,6 +211,11 @@ export default async function PortalEventPage({ params }: { params: Promise<{ id
 
         <TabsContent value="messages" className="space-y-3">
           <Card className="gap-0 py-0">
+            <div className="flex flex-wrap items-center gap-1.5 border-b bg-muted/30 px-4 py-2.5">
+              <span className="mr-1 text-xs font-semibold text-muted-foreground">Use these IDs in all correspondence</span>
+              <EntityReference label="Event ID" value={event.event_reference} />
+              <EntityReference label="Client ID" value={clientReference} />
+            </div>
             <CardContent className="max-h-[420px] space-y-3 overflow-y-auto p-4">
               {messages?.length ? (
                 messages.map((m) => {

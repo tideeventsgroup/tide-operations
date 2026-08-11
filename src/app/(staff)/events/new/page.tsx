@@ -10,14 +10,14 @@ export default async function NewEventPage() {
   const supabase = await createClient();
   const { data: organisations } = await supabase
     .from("organisations")
-    .select("id, name")
+    .select("id, name, client_reference")
     .order("name");
 
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader
         title="New event"
-        description="Creates the event record everything else in the system will link to."
+        description="Creates the event record and generates its permanent Event ID automatically."
       />
 
       <Card>
@@ -41,7 +41,7 @@ export default async function NewEventPage() {
                 <option value="">No client / internal</option>
                 {organisations?.map((org) => (
                   <option key={org.id} value={org.id}>
-                    {org.name}
+                    {org.client_reference} · {org.name}
                   </option>
                 ))}
               </select>

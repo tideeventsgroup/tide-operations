@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
+import { EntityReference } from "@/components/entity-reference";
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -13,14 +14,15 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
 
   const [{ data: event }, { data: organisations }] = await Promise.all([
     supabase.from("events").select("*").eq("id", id).maybeSingle(),
-    supabase.from("organisations").select("id, name").order("name"),
+    supabase.from("organisations").select("id, name, client_reference").order("name"),
   ]);
 
   if (!event) notFound();
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="Edit event" />
+      <PageHeader title="Edit event" description={event.event_reference} />
+      <EntityReference label="Event ID" value={event.event_reference} className="mb-3" />
 
       <Card>
         <CardHeader>
@@ -45,7 +47,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
                 <option value="">No client / internal</option>
                 {organisations?.map((org) => (
                   <option key={org.id} value={org.id}>
-                    {org.name}
+                    {org.client_reference} · {org.name}
                   </option>
                 ))}
               </select>

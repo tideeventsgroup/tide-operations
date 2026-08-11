@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { TideLogo } from "@/components/tide-logo";
+import { EntityReference } from "@/components/entity-reference";
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -16,14 +17,15 @@ export default async function PortalLayout({ children }: { children: React.React
 
   const { data: profile } = await supabase
     .from("user_profiles")
-    .select("account_type, full_name, organisations(name)")
+    .select("account_type, full_name, organisations(name, client_reference)")
     .eq("id", user.id)
     .maybeSingle();
 
   if (!profile) redirect("/sign-in");
   if (profile.account_type !== "client") redirect("/dashboard");
 
-  const orgName = (profile.organisations as { name: string } | null)?.name;
+  const organisation = profile.organisations as { name: string; client_reference: string } | null;
+  const orgName = organisation?.name;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#fafafa]">
@@ -33,6 +35,7 @@ export default async function PortalLayout({ children }: { children: React.React
           <span className="hidden text-sm font-medium text-muted-foreground sm:inline">
             Client portal{orgName ? ` · ${orgName}` : ""}
           </span>
+          <EntityReference label="Client ID" value={organisation?.client_reference} className="hidden sm:inline-flex" />
         </Link>
         <div className="flex items-center gap-3">
           <span className="hidden text-sm text-muted-foreground sm:inline">{profile.full_name}</span>

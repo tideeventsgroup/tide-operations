@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { EntityReference } from "@/components/entity-reference";
 
 const STATUS_STYLES: Record<string, string> = {
   prospect: "bg-warning-bg text-warning",
@@ -18,7 +19,7 @@ export default async function ClientsPage() {
   const supabase = await createClient();
   const { data: organisations, error } = await supabase
     .from("organisations")
-    .select("id, name, relationship_status, portal_access_enabled, contacts(count), events(count)")
+    .select("id, client_reference, name, relationship_status, portal_access_enabled, contacts(count), events(count)")
     .order("name");
 
   return (
@@ -59,6 +60,7 @@ export default async function ClientsPage() {
                         <Link href={`/clients/${org.id}`} className="block">
                           {org.name}
                         </Link>
+                        <EntityReference label="Client ID" value={org.client_reference} className="mt-1" />
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground tabular-nums">{contactCount}</TableCell>
                       <TableCell className="text-right text-muted-foreground tabular-nums">{eventCount}</TableCell>

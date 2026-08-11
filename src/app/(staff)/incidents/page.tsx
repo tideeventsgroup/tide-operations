@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ControlSessionBadge, IncidentSeverityBadge, IncidentStatusBadge } from "@/components/status-badges";
 import { EmptyState } from "@/components/empty-state";
+import { EntityReference } from "@/components/entity-reference";
 
 const STATUS_PRIORITY: Record<string, number> = { open: 0, monitoring: 1, resolved: 2, closed: 3 };
 
@@ -19,11 +20,11 @@ export default async function IncidentsPage() {
   const [{ data: incidentData }, { data: eventData }, { data: sessions }, { data: actions }] = await Promise.all([
     supabase
       .from("incidents")
-      .select("id, event_id, incident_number, summary, severity, status, time_reported, events(name)")
+      .select("id, event_id, incident_number, summary, severity, status, time_reported, events(name, event_reference)")
       .order("time_reported", { ascending: false }),
     supabase
       .from("events")
-      .select("id, name, venue, start_date, end_date, stage, organisations(name)")
+      .select("id, event_reference, name, venue, start_date, end_date, stage, organisations(name, client_reference)")
       .neq("stage", "complete"),
     supabase.from("event_control_sessions").select("event_id, status, opened_at"),
     supabase.from("incident_actions").select("event_id, status"),
@@ -70,6 +71,10 @@ export default async function IncidentsPage() {
                 </span>
                 <ControlSessionBadge status={closestSession?.status ?? "planned"} />
               </div>
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                <EntityReference label="Event ID" value={closestEvent.event_reference} inverse />
+                <EntityReference label="Client ID" value={(closestEvent.organisations as { client_reference: string } | null)?.client_reference} inverse />
+              </div>
               <h2 className="text-2xl font-semibold tracking-tight">{closestEvent.name}</h2>
               <p className="mt-1 text-sm text-white/60">
                 {(closestEvent.organisations as { name: string } | null)?.name ?? "Tide Events Group"}
@@ -98,7 +103,7 @@ export default async function IncidentsPage() {
             const metrics = eventMetrics.get(event.id);
             return (
               <Link key={event.id} href={`/incidents/control/${event.id}`} className="group rounded-lg border bg-card p-4 transition-colors hover:border-tide-teal/60 hover:bg-tide-teal/[0.03]">
-                <div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-tide-charcoal">{event.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{event.start_date ? new Date(event.start_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "Date TBC"}{event.venue ? ` · ${event.venue}` : ""}</p></div><ControlSessionBadge status={sessionMap.get(event.id)?.status ?? "planned"} /></div>
+                <div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-tide-charcoal">{event.name}</p><EntityReference label="Event ID" value={event.event_reference} className="mt-1" /><p className="mt-1 text-xs text-muted-foreground">{event.start_date ? new Date(event.start_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "Date TBC"}{event.venue ? ` · ${event.venue}` : ""}</p></div><ControlSessionBadge status={sessionMap.get(event.id)?.status ?? "planned"} /></div>
                 <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground"><span><strong className="text-foreground">{metrics?.openIncidents ?? 0}</strong> active incidents</span><span><strong className="text-foreground">{metrics?.openActions ?? 0}</strong> actions</span><ArrowRight className="ml-auto size-4 transition-transform group-hover:translate-x-0.5" /></div>
               </Link>
             );
@@ -115,7 +120,7 @@ export default async function IncidentsPage() {
               <TableBody>{incidents.map((incident) => (
                 <TableRow key={incident.id}>
                   <TableCell className="font-medium text-tide-charcoal"><Link href={`/incidents/${incident.id}`} className="block">{incident.incident_number}<span className="block text-xs font-normal text-muted-foreground">{incident.summary}</span></Link></TableCell>
-                  <TableCell className="text-muted-foreground"><Link href={`/incidents/control/${incident.event_id}`} className="hover:text-tide-teal">{(incident.events as { name: string } | null)?.name}</Link></TableCell>
+                  <TableCell className="text-muted-foreground"><Link href={`/incidents/control/${incident.event_id}`} className="hover:text-tide-teal">{(incident.events as { name: string } | null)?.name}</Link><EntityReference label="Event ID" value={(incident.events as { event_reference: string } | null)?.event_reference} className="mt-1" /></TableCell>
                   <TableCell className="text-muted-foreground">{new Date(incident.time_reported).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</TableCell>
                   <TableCell className="text-right"><IncidentSeverityBadge severity={incident.severity} /></TableCell>
                   <TableCell className="text-right"><IncidentStatusBadge status={incident.status} /></TableCell>

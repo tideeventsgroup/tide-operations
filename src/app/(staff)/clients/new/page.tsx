@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/page-header";
 export default function NewClientPage() {
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="New client" />
+      <PageHeader title="New client" description="A permanent Client ID is generated automatically when this record is created." />
 
       <Card>
         <CardHeader>

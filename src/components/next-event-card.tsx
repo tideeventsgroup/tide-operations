@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Building2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EntityReference } from "@/components/entity-reference";
 import { formatEventCountdown, cn } from "@/lib/utils";
 
 const STAGES = ["enquiry", "proposal", "confirmed", "planning", "live", "complete"] as const;
@@ -26,6 +27,8 @@ export function NextEventCard({
     end_date: string | null;
     stage: string;
     organisation_name: string | null;
+    event_reference: string;
+    client_reference: string | null;
   };
   openTaskCount: number;
   reviewCount: number;
@@ -48,6 +51,10 @@ export function NextEventCard({
             >
               {countdown}
             </span>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <EntityReference label="Event ID" value={event.event_reference} inverse />
+            <EntityReference label="Client ID" value={event.client_reference} inverse />
           </div>
           <h2 className="mt-1.5 text-2xl leading-tight font-semibold tracking-tight text-white">{event.name}</h2>
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/65">

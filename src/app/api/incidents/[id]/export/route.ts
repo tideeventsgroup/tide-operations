@@ -15,7 +15,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const { data: incident } = await supabase
     .from("incidents")
-    .select("*, events(name)")
+    .select("*, events(name, event_reference, organisations(name, client_reference))")
     .eq("id", id)
     .maybeSingle();
   if (!incident) return NextResponse.json({ error: "Incident not found" }, { status: 404 });
@@ -32,7 +32,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const rows: unknown[][] = [
     ["TIDE INCIDENT AUDIT EXPORT"],
     ["Incident", incident.incident_number],
+    ["Event ID", (incident.events as { event_reference: string } | null)?.event_reference],
     ["Event", (incident.events as { name: string } | null)?.name],
+    ["Client ID", (incident.events as { organisations: { client_reference: string } | null } | null)?.organisations?.client_reference],
+    ["Client", (incident.events as { organisations: { name: string } | null } | null)?.organisations?.name],
     ["Summary", incident.summary],
     ["Severity", incident.severity, "Status", incident.status],
     ["Location", incident.location, "Reported", incident.time_reported],
@@ -69,7 +72,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${incident.incident_number}-audit.csv"`,
+      "Content-Disposition": `attachment; filename="${(incident.events as { event_reference: string } | null)?.event_reference ?? "EVENT"}-${incident.incident_number}-audit.csv"`,
       "Cache-Control": "private, no-store",
     },
   });
