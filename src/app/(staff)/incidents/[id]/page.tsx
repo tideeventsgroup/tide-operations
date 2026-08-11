@@ -1,289 +1,116 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, Gavel, HeartPulse, Radio, ShieldAlert, Truck } from "lucide-react";
+import { ArrowLeft, CheckSquare, Download, FileUp, Gavel, HeartPulse, MapPin, PhoneCall, Radio, ShieldAlert, Siren, Truck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { logDecision, createResource, updateResourceStatus, saveWelfareRecord, saveMethaneMessage } from "@/lib/actions/incidents";
+import {
+  createIncidentAction,
+  createResource,
+  logDecision,
+  logRadioMessage,
+  saveMethaneMessage,
+  saveWelfareRecord,
+  updateIncidentAction,
+  updateResourceStatus,
+  uploadIncidentEvidence,
+} from "@/lib/actions/incidents";
 import { IncidentLog } from "@/components/incidents/incident-log";
 import { IncidentRealtimeRefresh } from "@/components/incidents/realtime-refresh";
 import { IncidentStatusBar } from "@/components/incidents/incident-status-bar";
+import { IncidentActionStatusBadge, IncidentSeverityBadge, IncidentStatusBadge } from "@/components/status-badges";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+
+function formatDateTime(value: string | null) {
+  return value ? new Date(value).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
+}
 
 export default async function IncidentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
 
-  const { data: viewerProfile } = await supabase
-    .from("user_profiles")
-    .select("staff_role")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const canManage = viewerProfile?.staff_role != null && ["admin", "manager", "control_room"].includes(viewerProfile.staff_role);
-
-  const { data: incident } = await supabase
-    .from("incidents")
-    .select(
-      "id, incident_number, summary, category, severity, status, location, time_reported, incident_commander_id, casualty_count, event_id, events(id, name)",
-    )
-    .eq("id", id)
-    .maybeSingle();
-
+  const [{ data: viewerProfile }, { data: incident }] = await Promise.all([
+    supabase.from("user_profiles").select("staff_role").eq("id", user.id).maybeSingle(),
+    supabase.from("incidents").select("*, events(id, name, venue)").eq("id", id).maybeSingle(),
+  ]);
   if (!incident) notFound();
 
-  const eventName = (incident.events as { name: string } | null)?.name;
-
-  const [{ data: staffProfiles }, { data: logEntries }, { data: decisions }, { data: resources }] = await Promise.all([
-    supabase.from("user_profiles").select("id, full_name, email").eq("account_type", "staff"),
-    supabase
-      .from("incident_log_entries")
-      .select("id, time, entry_type, body, author_id, supersedes_entry_id")
-      .eq("incident_id", id)
-      .order("time"),
-    supabase.from("decisions").select("*").eq("incident_id", id).order("created_at"),
-    supabase.from("resources").select("*").eq("event_id", incident.event_id).order("call_sign"),
+  const canManage = viewerProfile?.staff_role != null && ["admin", "manager", "control_room"].includes(viewerProfile.staff_role);
+  const event = incident.events as { id: string; name: string; venue: string | null } | null;
+  const [
+    { data: profiles },
+    { data: logEntries },
+    { data: decisions },
+    { data: resources },
+    { data: actions },
+    { data: channels },
+    { data: radioMessages },
+    { data: attachments },
+  ] = await Promise.all([
+    supabase.from("user_profiles").select("id, full_name, email").eq("account_type", "staff").order("full_name"),
+    supabase.from("incident_log_entries").select("id, time, entry_type, body, author_id, supersedes_entry_id").eq("incident_id", id).order("time"),
+    supabase.from("decisions").select("*").eq("incident_id", id).order("created_at", { ascending: false }),
+    supabase.from("resources").select("*").eq("incident_id", id).order("call_sign"),
+    supabase.from("incident_actions").select("*, user_profiles!incident_actions_assigned_to_fkey(full_name)").eq("incident_id", id).order("created_at", { ascending: false }),
+    supabase.from("radio_channels").select("*").eq("event_id", incident.event_id).eq("active", true).order("channel_name"),
+    supabase.from("radio_messages").select("*, radio_channels(channel_name), user_profiles!radio_messages_author_id_fkey(full_name)").eq("incident_id", id).order("time", { ascending: false }),
+    supabase.from("incident_attachments").select("*").eq("incident_id", id).order("created_at", { ascending: false }),
   ]);
-
-  const welfareRecords = canManage
-    ? (await supabase.from("welfare_records").select("*").eq("incident_id", id).order("created_at")).data
-    : null;
-
-  const methane = canManage
-    ? (await supabase.from("methane_messages").select("*").eq("incident_id", id).maybeSingle()).data
-    : null;
-
-  const staffDirectory = (staffProfiles ?? []).map((p) => ({ id: p.id, name: p.full_name || p.email }));
-  const authorMap: Record<string, string> = Object.fromEntries(staffDirectory.map((s) => [s.id, s.name]));
+  const welfareRecords = canManage ? (await supabase.from("welfare_records").select("*").eq("incident_id", id).order("created_at", { ascending: false })).data : null;
+  const methane = canManage ? (await supabase.from("methane_messages").select("*").eq("incident_id", id).maybeSingle()).data : null;
+  const methaneVersions = canManage && methane ? (await supabase.from("methane_message_versions").select("*").eq("methane_message_id", methane.id).order("revision", { ascending: false })).data : null;
+  const directory = (profiles ?? []).map((profile) => ({ id: profile.id, name: profile.full_name || profile.email }));
+  const authorMap = Object.fromEntries(directory.map((profile) => [profile.id, profile.name]));
+  const openActions = (actions ?? []).filter((action) => action.status !== "complete").length;
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-7xl space-y-4">
       <IncidentRealtimeRefresh incidentId={id} eventId={incident.event_id} />
-      <Link
-        href="/incidents"
-        className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-tide-charcoal"
-      >
-        <ArrowLeft className="size-3.5" />
-        Incidents
-      </Link>
-
-      <div className="mb-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl leading-tight font-semibold tracking-tight text-tide-charcoal">
-            {incident.incident_number}
-          </h1>
-          <span className="text-sm text-muted-foreground">
-            {eventName} {incident.location ? `· ${incident.location}` : ""}
-          </span>
-        </div>
-        <p className="mt-1 text-sm text-tide-charcoal">{incident.summary}</p>
-        <div className="mt-3">
-          <IncidentStatusBar
-            incidentId={id}
-            eventId={incident.event_id}
-            initial={{
-              status: incident.status,
-              severity: incident.severity,
-              incident_commander_id: incident.incident_commander_id,
-              casualty_count: incident.casualty_count,
-            }}
-            staffDirectory={staffDirectory}
-            canManage={canManage}
-          />
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link href={`/incidents/control/${incident.event_id}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-tide-charcoal"><ArrowLeft className="size-4" />{event?.name ?? "Event Control"}</Link>
+        <div className="flex gap-2"><Button render={<Link href={`/api/incidents/${id}/export`} />} nativeButton={false} size="sm" variant="outline"><Download className="size-4" />Export audit</Button><Button render={<Link href={`/incidents/new?event_id=${incident.event_id}`} />} nativeButton={false} size="sm"><Siren className="size-4" />Report another</Button></div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-        <Card className="gap-0 py-0">
-          <CardHeader className="border-b py-2.5">
-            <CardTitle className="text-sm">Contemporaneous log</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <IncidentLog incidentId={id} initialEntries={logEntries ?? []} staffDirectory={authorMap} />
-          </CardContent>
-        </Card>
-
-        <div className="space-y-4">
-          <Card className="gap-0 py-0">
-            <CardHeader className="border-b py-2.5">
-              <CardTitle className="flex items-center gap-1.5 text-sm">
-                <Gavel className="size-3.5 text-tide-teal" />
-                Decisions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2.5 p-3">
-              {canManage && (
-                <form action={logDecision} className="space-y-2 border-b pb-3">
-                  <input type="hidden" name="incident_id" value={id} />
-                  <input type="hidden" name="event_id" value={incident.event_id} />
-                  <Textarea name="decision_text" required rows={2} placeholder="Decision made…" className="text-sm" />
-                  <Textarea name="rationale" rows={1} placeholder="Rationale (optional)" className="text-sm" />
-                  <Button type="submit" size="sm" variant="outline">
-                    Log decision
-                  </Button>
-                </form>
-              )}
-              {decisions?.length ? (
-                decisions.map((d) => (
-                  <div key={d.id} className="text-sm">
-                    <p className="text-tide-charcoal">{d.decision_text}</p>
-                    {d.rationale && <p className="text-[12.5px] text-muted-foreground">{d.rationale}</p>}
-                  </div>
-                ))
-              ) : (
-                <p className="text-[12.5px] text-muted-foreground">No decisions logged.</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="gap-0 py-0">
-            <CardHeader className="border-b py-2.5">
-              <CardTitle className="flex items-center gap-1.5 text-sm">
-                <Truck className="size-3.5 text-tide-teal" />
-                Resources — {eventName}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2.5 p-3">
-              {canManage && (
-                <form action={createResource} className="flex flex-wrap items-end gap-1.5 border-b pb-3">
-                  <input type="hidden" name="event_id" value={incident.event_id} />
-                  <input type="hidden" name="incident_id" value={id} />
-                  <Input name="type" placeholder="Type (e.g. Medic)" required className="h-7 w-28 text-[12.5px]" />
-                  <Input name="call_sign" placeholder="Call sign" className="h-7 w-24 text-[12.5px]" />
-                  <Input name="location" placeholder="Location" className="h-7 w-28 text-[12.5px]" />
-                  <Button type="submit" size="sm" variant="outline">
-                    Add
-                  </Button>
-                </form>
-              )}
-              {resources?.length ? (
-                resources.map((r) => (
-                  <form
-                    key={r.id}
-                    action={updateResourceStatus}
-                    className="flex items-center justify-between gap-2 text-sm"
-                  >
-                    <input type="hidden" name="resource_id" value={r.id} />
-                    <input type="hidden" name="event_id" value={incident.event_id} />
-                    <input type="hidden" name="incident_id" value={id} />
-                    <span className="min-w-0 truncate text-tide-charcoal">
-                      {r.call_sign ?? r.type} <span className="text-muted-foreground">· {r.type}</span>
-                    </span>
-                    {canManage ? (
-                      <Input name="status" defaultValue={r.status ?? ""} className="h-7 w-28 text-[12px]" />
-                    ) : (
-                      <span className="text-[12.5px] text-muted-foreground">{r.status}</span>
-                    )}
-                  </form>
-                ))
-              ) : (
-                <p className="text-[12.5px] text-muted-foreground">No resources logged for this event.</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {canManage && (
-            <Card className="gap-0 py-0">
-              <CardHeader className="border-b py-2.5">
-                <CardTitle className="flex items-center gap-1.5 text-sm">
-                  <HeartPulse className="size-3.5 text-tide-teal" />
-                  Welfare records
-                  <span className="ml-auto text-[10px] font-semibold tracking-wide text-warning uppercase">Restricted</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2.5 p-3">
-                <form action={saveWelfareRecord} className="space-y-2 border-b pb-3">
-                  <input type="hidden" name="incident_id" value={id} />
-                  <input type="hidden" name="event_id" value={incident.event_id} />
-                  <div className="flex gap-1.5">
-                    <Input name="person_name" placeholder="Name" className="h-7 text-[12.5px]" />
-                    <Input name="person_contact" placeholder="Contact" className="h-7 text-[12.5px]" />
-                  </div>
-                  <Input name="casualty_status" placeholder="Status (e.g. treated on scene)" className="h-7 text-[12.5px]" />
-                  <Textarea name="medical_notes" rows={2} placeholder="Medical notes" className="text-sm" />
-                  <Button type="submit" size="sm" variant="outline">
-                    Save record
-                  </Button>
-                </form>
-                {welfareRecords?.length ? (
-                  welfareRecords.map((w) => (
-                    <div key={w.id} className="text-sm">
-                      <p className="font-medium text-tide-charcoal">
-                        {(w.person_details as { name?: string })?.name ?? "Unnamed"} — {w.casualty_status}
-                      </p>
-                      {w.medical_notes && <p className="text-[12.5px] text-muted-foreground">{w.medical_notes}</p>}
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-[12.5px] text-muted-foreground">No welfare records.</p>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {canManage && (
-            <Card className="gap-0 py-0">
-              <CardHeader className="border-b py-2.5">
-                <CardTitle className="flex items-center gap-1.5 text-sm">
-                  <Radio className="size-3.5 text-tide-teal" />
-                  M/ETHANE
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-3">
-                {methane?.major_incident_declared && (
-                  <div className="mb-3 flex items-center gap-1.5 rounded-md bg-destructive/10 px-2.5 py-1.5 text-[12.5px] font-medium text-destructive">
-                    <ShieldAlert className="size-3.5" />
-                    Major incident declared
-                  </div>
-                )}
-                <form action={saveMethaneMessage} className="space-y-2">
-                  <input type="hidden" name="incident_id" value={id} />
-                  <label className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      name="major_incident_declared"
-                      value="true"
-                      defaultChecked={methane?.major_incident_declared ?? false}
-                      className="size-3.5"
-                    />
-                    Major incident declared
-                  </label>
-                  <Input name="exact_location" defaultValue={methane?.exact_location ?? ""} placeholder="Exact location" className="h-7 text-[12.5px]" />
-                  <Input name="incident_type" defaultValue={methane?.incident_type ?? ""} placeholder="Incident type" className="h-7 text-[12.5px]" />
-                  <Input name="hazards" defaultValue={methane?.hazards ?? ""} placeholder="Hazards" className="h-7 text-[12.5px]" />
-                  <Input name="access" defaultValue={methane?.access ?? ""} placeholder="Access" className="h-7 text-[12.5px]" />
-                  <Textarea
-                    name="casualty_numbers"
-                    rows={1}
-                    defaultValue={(methane?.casualty_numbers as { notes?: string })?.notes ?? ""}
-                    placeholder="Number of casualties"
-                    className="text-sm"
-                  />
-                  <Textarea
-                    name="emergency_services"
-                    rows={1}
-                    defaultValue={(methane?.emergency_services as { notes?: string })?.notes ?? ""}
-                    placeholder="Emergency services present/required"
-                    className="text-sm"
-                  />
-                  <Button type="submit" size="sm" variant="outline">
-                    Save
-                  </Button>
-                </form>
-                <p className="mt-2 text-[11px] text-muted-foreground">
-                  Supports communication with emergency services — does not replace calling 999.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+      <div className="rounded-lg border bg-card">
+        <div className="flex flex-wrap items-start justify-between gap-4 p-5">
+          <div><div className="flex flex-wrap items-center gap-2"><h1 className="text-2xl font-semibold tracking-tight text-tide-charcoal">{incident.incident_number}</h1><IncidentSeverityBadge severity={incident.severity} /><IncidentStatusBadge status={incident.status} /></div><p className="mt-2 max-w-3xl text-base text-tide-charcoal">{incident.summary}</p><div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground"><span>Reported {formatDateTime(incident.time_reported)}</span>{incident.category && <span>{incident.category}</span>}{incident.location && <span className="inline-flex items-center gap-1"><MapPin className="size-3" />{incident.location}</span>}<span>Last activity {formatDateTime(incident.last_activity_at)}</span></div></div>
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md bg-border"><div className="min-w-24 bg-muted/50 px-4 py-3 text-center"><p className="text-xl font-semibold tabular-nums">{incident.casualty_count}</p><p className="text-[11px] text-muted-foreground">Casualties</p></div><div className="min-w-24 bg-muted/50 px-4 py-3 text-center"><p className="text-xl font-semibold tabular-nums">{openActions}</p><p className="text-[11px] text-muted-foreground">Open actions</p></div></div>
         </div>
+        <div className="border-t p-3"><IncidentStatusBar incidentId={id} eventId={incident.event_id} initial={{ status: incident.status, severity: incident.severity, incident_commander_id: incident.incident_commander_id, casualty_count: incident.casualty_count }} staffDirectory={directory} canManage={canManage} /></div>
       </div>
+
+      {incident.emergency_services_called && <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/[0.05] p-3 text-sm"><PhoneCall className="size-5 text-destructive" /><div><p className="font-semibold text-tide-charcoal">Emergency services called</p><p className="text-xs text-muted-foreground">Call recorded {formatDateTime(incident.emergency_services_call_time)}</p></div></div>}
+
+      <Tabs defaultValue="log" className="gap-3">
+        <div className="overflow-x-auto border-b"><TabsList variant="line" className="h-10 min-w-max"><TabsTrigger value="log">Live log</TabsTrigger><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="actions">Actions ({openActions})</TabsTrigger><TabsTrigger value="decisions">Decisions</TabsTrigger><TabsTrigger value="people">People & welfare</TabsTrigger><TabsTrigger value="resources">Resources</TabsTrigger><TabsTrigger value="radio">Radio</TabsTrigger><TabsTrigger value="methane">M/ETHANE</TabsTrigger><TabsTrigger value="evidence">Evidence ({attachments?.length ?? 0})</TabsTrigger></TabsList></div>
+
+        <TabsContent value="log"><Card className="gap-0 py-0"><CardHeader className="border-b py-3"><CardTitle className="text-sm">Contemporaneous incident log</CardTitle></CardHeader><CardContent className="p-0"><IncidentLog incidentId={id} initialEntries={logEntries ?? []} staffDirectory={authorMap} /></CardContent></Card></TabsContent>
+
+        <TabsContent value="overview"><div className="grid gap-3 lg:grid-cols-2"><Card><CardHeader><CardTitle className="text-sm">Situation</CardTitle></CardHeader><CardContent className="space-y-3 text-sm"><div><p className="text-xs font-semibold text-muted-foreground uppercase">Initial report</p><p className="mt-1 whitespace-pre-wrap">{incident.description || "No detailed situation recorded."}</p></div><div className="grid grid-cols-2 gap-3"><div><p className="text-xs text-muted-foreground">Reported via</p><p>{incident.reported_via || "—"}</p></div><div><p className="text-xs text-muted-foreground">Hazard reference</p><p>{incident.hazard_reference || "—"}</p></div></div></CardContent></Card><Card><CardHeader><CardTitle className="text-sm">Resolution</CardTitle></CardHeader><CardContent className="text-sm"><p className="whitespace-pre-wrap">{incident.resolution_summary || "Resolution has not yet been recorded."}</p>{incident.closed_at && <p className="mt-3 text-xs text-muted-foreground">Closed {formatDateTime(incident.closed_at)}</p>}</CardContent></Card></div></TabsContent>
+
+        <TabsContent value="actions" className="space-y-3">
+          {canManage && <Card><CardHeader><CardTitle className="flex items-center gap-2 text-sm"><CheckSquare className="size-4 text-tide-teal" />Create action</CardTitle></CardHeader><CardContent><form action={createIncidentAction} className="grid gap-3 md:grid-cols-[1fr_140px_200px_auto]"><input type="hidden" name="event_id" value={incident.event_id} /><input type="hidden" name="incident_id" value={id} /><Input name="title" required placeholder="Required action" className="h-10" /><select name="priority" defaultValue="normal" className="h-10 rounded-md border border-input bg-background px-3 text-sm"><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select><select name="assigned_to" defaultValue="" className="h-10 rounded-md border border-input bg-background px-3 text-sm"><option value="">Unassigned</option>{directory.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}</select><Button type="submit">Add action</Button></form></CardContent></Card>}
+          <Card className="gap-0 py-0"><CardContent className="p-0"><Table><TableHeader><TableRow><TableHead>Action</TableHead><TableHead>Owner</TableHead><TableHead>Priority</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Update</TableHead></TableRow></TableHeader><TableBody>{actions?.map((action) => <TableRow key={action.id}><TableCell className="font-medium">{action.title}{action.completion_note && <span className="block text-xs font-normal text-muted-foreground">{action.completion_note}</span>}</TableCell><TableCell>{(action.user_profiles as { full_name: string | null } | null)?.full_name ?? "Unassigned"}</TableCell><TableCell className="capitalize">{action.priority}</TableCell><TableCell><IncidentActionStatusBadge status={action.status} /></TableCell><TableCell className="text-right">{canManage && <form action={updateIncidentAction} className="inline-flex gap-2"><input type="hidden" name="action_id" value={action.id} /><input type="hidden" name="event_id" value={incident.event_id} /><input type="hidden" name="incident_id" value={id} /><select name="status" defaultValue={action.status} className="h-9 rounded-md border border-input bg-background px-2 text-xs"><option value="open">Open</option><option value="in_progress">In progress</option><option value="blocked">Blocked</option><option value="complete">Complete</option><option value="cancelled">Cancelled</option></select><Button type="submit" size="sm" variant="outline">Save</Button></form>}</TableCell></TableRow>)}{!actions?.length && <TableRow><TableCell colSpan={5} className="py-8 text-center text-muted-foreground">No actions recorded.</TableCell></TableRow>}</TableBody></Table></CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="decisions" className="space-y-3">{canManage && <Card><CardHeader><CardTitle className="flex items-center gap-2 text-sm"><Gavel className="size-4 text-tide-teal" />Record command decision</CardTitle></CardHeader><CardContent><form action={logDecision} className="space-y-3"><input type="hidden" name="incident_id" value={id} /><input type="hidden" name="event_id" value={incident.event_id} /><Textarea name="decision_text" required placeholder="Decision made" /><div className="grid gap-3 md:grid-cols-2"><Textarea name="rationale" placeholder="Rationale" /><Textarea name="outcome" placeholder="Expected or actual outcome" /></div><Button type="submit">Log decision</Button></form></CardContent></Card>}<div className="space-y-2">{decisions?.map((decision) => <Card key={decision.id}><CardContent className="p-4"><div className="flex justify-between gap-3"><p className="font-medium">{decision.decision_text}</p><time className="shrink-0 text-xs text-muted-foreground">{formatDateTime(decision.created_at)}</time></div>{decision.rationale && <p className="mt-2 text-sm text-muted-foreground"><strong>Rationale:</strong> {decision.rationale}</p>}{decision.outcome && <p className="mt-1 text-sm text-muted-foreground"><strong>Outcome:</strong> {decision.outcome}</p>}</CardContent></Card>)}{!decisions?.length && <p className="rounded-lg border p-8 text-center text-sm text-muted-foreground">No decisions logged.</p>}</div></TabsContent>
+
+        <TabsContent value="people" className="space-y-3"><div className="rounded-lg border border-warning/25 bg-warning-bg p-3 text-sm"><strong>Restricted operational record.</strong> Only authorised control staff can access welfare information.</div>{canManage && <Card><CardHeader><CardTitle className="flex items-center gap-2 text-sm"><HeartPulse className="size-4 text-tide-teal" />Add casualty or welfare record</CardTitle></CardHeader><CardContent><form action={saveWelfareRecord} className="grid gap-3 md:grid-cols-3"><input type="hidden" name="incident_id" value={id} /><input type="hidden" name="event_id" value={incident.event_id} /><Input name="casualty_reference" placeholder="Casualty reference" /><Input name="person_name" placeholder="Name" /><Input name="person_contact" placeholder="Contact" /><Input name="triage_category" placeholder="Triage category" /><Input name="age_band" placeholder="Age band" /><Input name="casualty_status" placeholder="Current status" /><Input name="disposition" placeholder="Disposition" /><Input name="handed_over_to" placeholder="Handed over to" /><Input type="datetime-local" name="handover_time" /><Textarea name="medical_notes" placeholder="Treatment and welfare notes" className="md:col-span-3" /><label className="flex items-center gap-2 text-sm"><input type="checkbox" name="next_of_kin_contacted" value="true" />Next of kin contacted</label><Button type="submit" className="md:col-start-3">Save restricted record</Button></form></CardContent></Card>}<Card className="gap-0 py-0"><CardContent className="p-0"><Table><TableHeader><TableRow><TableHead>Reference / person</TableHead><TableHead>Triage</TableHead><TableHead>Status</TableHead><TableHead>Disposition</TableHead><TableHead>Recorded</TableHead></TableRow></TableHeader><TableBody>{welfareRecords?.map((record) => <TableRow key={record.id}><TableCell className="font-medium">{record.casualty_reference || (record.person_details as { name?: string })?.name || "Unnamed"}</TableCell><TableCell>{record.triage_category || "—"}</TableCell><TableCell>{record.casualty_status || "—"}</TableCell><TableCell>{record.disposition || "—"}</TableCell><TableCell>{formatDateTime(record.created_at)}</TableCell></TableRow>)}{!welfareRecords?.length && <TableRow><TableCell colSpan={5} className="py-8 text-center text-muted-foreground">No welfare records visible.</TableCell></TableRow>}</TableBody></Table></CardContent></Card></TabsContent>
+
+        <TabsContent value="resources" className="space-y-3">{canManage && <Card><CardHeader><CardTitle className="flex items-center gap-2 text-sm"><Truck className="size-4 text-tide-teal" />Assign resource</CardTitle></CardHeader><CardContent><form action={createResource} className="grid gap-3 md:grid-cols-5"><input type="hidden" name="event_id" value={incident.event_id} /><input type="hidden" name="incident_id" value={id} /><Input name="type" required placeholder="Type" /><Input name="call_sign" placeholder="Call sign" /><Input name="location" placeholder="Location" /><Input name="assigned_to" placeholder="Assigned to" /><Button type="submit">Add resource</Button></form></CardContent></Card>}<Card className="gap-0 py-0"><CardContent className="p-0"><Table><TableHeader><TableRow><TableHead>Call sign</TableHead><TableHead>Type</TableHead><TableHead>Location</TableHead><TableHead>Assigned</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody>{resources?.map((resource) => <TableRow key={resource.id}><TableCell className="font-medium">{resource.call_sign || "—"}</TableCell><TableCell>{resource.type}</TableCell><TableCell>{resource.location || "—"}</TableCell><TableCell>{resource.assigned_to || "—"}</TableCell><TableCell>{canManage ? <form action={updateResourceStatus} className="flex gap-2"><input type="hidden" name="resource_id" value={resource.id} /><input type="hidden" name="event_id" value={incident.event_id} /><input type="hidden" name="incident_id" value={id} /><select name="status" defaultValue={resource.status || "available"} className="h-9 rounded-md border border-input bg-background px-2 text-xs"><option value="available">Available</option><option value="deployed">Deployed</option><option value="stood_down">Stood down</option><option value="released">Released</option></select><Button type="submit" size="sm" variant="outline">Save</Button></form> : resource.status}</TableCell></TableRow>)}{!resources?.length && <TableRow><TableCell colSpan={5} className="py-8 text-center text-muted-foreground">No incident resources assigned.</TableCell></TableRow>}</TableBody></Table></CardContent></Card></TabsContent>
+
+        <TabsContent value="radio" className="space-y-3">{canManage && <Card><CardHeader><CardTitle className="flex items-center gap-2 text-sm"><Radio className="size-4 text-tide-teal" />Log radio traffic</CardTitle></CardHeader><CardContent><form action={logRadioMessage} className="grid gap-3 md:grid-cols-[160px_1fr_1fr_2fr_auto]"><input type="hidden" name="event_id" value={incident.event_id} /><input type="hidden" name="incident_id" value={id} /><select name="radio_channel_id" className="h-10 rounded-md border border-input bg-background px-2 text-sm"><option value="">No channel</option>{channels?.map((channel) => <option key={channel.id} value={channel.id}>{channel.channel_name}</option>)}</select><Input name="from_call_sign" placeholder="From" /><Input name="to_call_sign" placeholder="To" /><Input name="body" required placeholder="Message" /><Button type="submit">Log</Button></form></CardContent></Card>}<Card className="gap-0 py-0"><CardContent className="p-0"><Table><TableHeader><TableRow><TableHead>Time</TableHead><TableHead>Channel</TableHead><TableHead>From → To</TableHead><TableHead>Message</TableHead><TableHead>Logged by</TableHead></TableRow></TableHeader><TableBody>{radioMessages?.map((message) => <TableRow key={message.id}><TableCell className="tabular-nums">{formatDateTime(message.time)}</TableCell><TableCell>{(message.radio_channels as { channel_name: string } | null)?.channel_name || "—"}</TableCell><TableCell>{message.from_call_sign || "—"} → {message.to_call_sign || "—"}</TableCell><TableCell className="font-medium">{message.body}</TableCell><TableCell>{(message.user_profiles as { full_name: string | null } | null)?.full_name || "—"}</TableCell></TableRow>)}{!radioMessages?.length && <TableRow><TableCell colSpan={5} className="py-8 text-center text-muted-foreground">No radio traffic logged against this incident.</TableCell></TableRow>}</TableBody></Table></CardContent></Card></TabsContent>
+
+        <TabsContent value="methane"><div className="grid gap-3 lg:grid-cols-[1fr_320px]">{canManage ? <Card><CardHeader><CardTitle className="flex items-center gap-2 text-sm"><ShieldAlert className="size-4 text-tide-teal" />M/ETHANE emergency message</CardTitle></CardHeader><CardContent><form action={saveMethaneMessage} className="space-y-3"><input type="hidden" name="incident_id" value={id} /><label className="flex items-center gap-2 rounded-md bg-destructive/[0.05] p-3 text-sm font-medium"><input type="checkbox" name="major_incident_declared" value="true" defaultChecked={methane?.major_incident_declared ?? false} />M — Major incident declared</label><div className="grid gap-3 md:grid-cols-2"><Input name="exact_location" defaultValue={methane?.exact_location ?? ""} placeholder="E — Exact location" /><Input name="incident_type" defaultValue={methane?.incident_type ?? ""} placeholder="T — Type of incident" /><Input name="hazards" defaultValue={methane?.hazards ?? ""} placeholder="H — Hazards" /><Input name="access" defaultValue={methane?.access ?? ""} placeholder="A — Access routes" /><Textarea name="casualty_numbers" defaultValue={(methane?.casualty_numbers as { notes?: string })?.notes ?? ""} placeholder="N — Number and type of casualties" /><Textarea name="emergency_services" defaultValue={(methane?.emergency_services as { notes?: string })?.notes ?? ""} placeholder="E — Emergency services present / required" /></div><Input name="receiving_service" defaultValue={methane?.receiving_service ?? ""} placeholder="Receiving service / contact" /><div className="flex items-center justify-between border-t pt-3"><label className="flex items-center gap-2 text-sm"><input type="checkbox" name="mark_as_sent" value="true" />Mark this version as sent</label><Button type="submit">Save M/ETHANE</Button></div></form><p className="mt-3 text-xs text-muted-foreground">Supports structured communication with emergency services. Always call 999 for an emergency.</p></CardContent></Card> : <p className="rounded-lg border p-8 text-sm text-muted-foreground">M/ETHANE access is restricted.</p>}<Card><CardHeader><CardTitle className="text-sm">Message history</CardTitle></CardHeader><CardContent className="space-y-3">{methane?.sent_at && <div className="rounded-md bg-success-bg p-3 text-sm text-success"><strong>Sent</strong><br />{formatDateTime(methane.sent_at)}{methane.receiving_service ? ` · ${methane.receiving_service}` : ""}</div>}{methaneVersions?.map((version) => <div key={version.id} className="border-b pb-2 text-xs last:border-0"><p className="font-medium">Version {version.revision}</p><p className="text-muted-foreground">{formatDateTime(version.created_at)}</p></div>)}{!methaneVersions?.length && <p className="text-sm text-muted-foreground">No saved revisions.</p>}</CardContent></Card></div></TabsContent>
+
+        <TabsContent value="evidence" className="space-y-3">{canManage && <Card><CardHeader><CardTitle className="flex items-center gap-2 text-sm"><FileUp className="size-4 text-tide-teal" />Upload evidence</CardTitle></CardHeader><CardContent><form action={uploadIncidentEvidence} className="grid gap-3 md:grid-cols-[180px_1fr_1fr_auto]"><input type="hidden" name="event_id" value={incident.event_id} /><input type="hidden" name="incident_id" value={id} /><select name="evidence_type" className="h-10 rounded-md border border-input bg-background px-3 text-sm"><option value="photo">Photo</option><option value="video">Video</option><option value="audio">Audio</option><option value="statement">Statement</option><option value="document">Document</option><option value="other">Other</option></select><Input name="caption" placeholder="Description / provenance" /><Input type="file" name="file" required className="h-10 pt-2" /><Button type="submit">Upload</Button></form></CardContent></Card>}<Card className="gap-0 py-0"><CardContent className="p-0"><Table><TableHeader><TableRow><TableHead>File</TableHead><TableHead>Type</TableHead><TableHead>Caption</TableHead><TableHead>Uploaded</TableHead><TableHead className="text-right">Access</TableHead></TableRow></TableHeader><TableBody>{attachments?.map((attachment) => <TableRow key={attachment.id}><TableCell className="font-medium">{attachment.file_name}<span className="block text-xs font-normal text-muted-foreground">{Math.ceil(attachment.file_size / 1024)} KB</span></TableCell><TableCell className="capitalize">{attachment.evidence_type}</TableCell><TableCell>{attachment.caption || "—"}</TableCell><TableCell>{formatDateTime(attachment.created_at)}</TableCell><TableCell className="text-right"><Button render={<Link href={`/api/incidents/${id}/evidence/${attachment.id}`} />} nativeButton={false} size="sm" variant="outline"><Download className="size-4" />Download</Button></TableCell></TableRow>)}{!attachments?.length && <TableRow><TableCell colSpan={5} className="py-8 text-center text-muted-foreground">No evidence uploaded.</TableCell></TableRow>}</TableBody></Table></CardContent></Card></TabsContent>
+      </Tabs>
     </div>
   );
 }

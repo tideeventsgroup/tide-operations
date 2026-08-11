@@ -147,3 +147,42 @@ export function IncidentStatusBadge({ status }: { status: string }) {
     </Badge>
   );
 }
+
+const INCIDENT_ACTION_LABELS: Record<string, string> = {
+  open: "Open",
+  in_progress: "In progress",
+  blocked: "Blocked",
+  complete: "Complete",
+  cancelled: "Cancelled",
+};
+
+const INCIDENT_ACTION_STYLES: Record<string, string> = {
+  open: "bg-info-bg text-info",
+  in_progress: "bg-warning-bg text-warning",
+  blocked: "bg-destructive/10 text-destructive border-destructive/30",
+  complete: "bg-success-bg text-success",
+  cancelled: "bg-muted text-muted-foreground",
+};
+
+export function IncidentActionStatusBadge({ status }: { status: string }) {
+  return (
+    <Badge variant="outline" className={cn("shrink-0", INCIDENT_ACTION_STYLES[status])}>
+      {INCIDENT_ACTION_LABELS[status] ?? status}
+    </Badge>
+  );
+}
+
+const CONTROL_SESSION_STYLES: Record<string, string> = {
+  standby: "bg-muted text-muted-foreground",
+  active: "bg-success-bg text-success border-success/30",
+  closed: "bg-tide-charcoal/10 text-tide-charcoal",
+};
+
+export function ControlSessionBadge({ status }: { status: string }) {
+  return (
+    <Badge variant="outline" className={cn("shrink-0 capitalize", CONTROL_SESSION_STYLES[status])}>
+      <span className={cn("size-1.5 rounded-full", status === "active" ? "bg-success" : "bg-current/50")} />
+      {status}
+    </Badge>
+  );
+}

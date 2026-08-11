@@ -149,7 +149,9 @@ export type Database = {
           decision_text: string
           event_id: string
           id: string
+          implemented_at: string | null
           incident_id: string | null
+          outcome: string | null
           rationale: string | null
         }
         Insert: {
@@ -158,7 +160,9 @@ export type Database = {
           decision_text: string
           event_id: string
           id?: string
+          implemented_at?: string | null
           incident_id?: string | null
+          outcome?: string | null
           rationale?: string | null
         }
         Update: {
@@ -167,7 +171,9 @@ export type Database = {
           decision_text?: string
           event_id?: string
           id?: string
+          implemented_at?: string | null
           incident_id?: string | null
+          outcome?: string | null
           rationale?: string | null
         }
         Relationships: [
@@ -451,6 +457,211 @@ export type Database = {
           },
         ]
       }
+      event_control_log_entries: {
+        Row: {
+          author_id: string | null
+          body: string
+          created_at: string
+          entry_type: Database["public"]["Enums"]["incident_log_entry_type"]
+          event_id: string
+          id: string
+          incident_id: string | null
+          supersedes_entry_id: string | null
+          time: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          created_at?: string
+          entry_type?: Database["public"]["Enums"]["incident_log_entry_type"]
+          event_id: string
+          id?: string
+          incident_id?: string | null
+          supersedes_entry_id?: string | null
+          time?: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          entry_type?: Database["public"]["Enums"]["incident_log_entry_type"]
+          event_id?: string
+          id?: string
+          incident_id?: string | null
+          supersedes_entry_id?: string | null
+          time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_control_log_entries_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_control_log_entries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_control_log_entries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "v_upcoming_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_control_log_entries_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_control_log_entries_supersedes_entry_id_fkey"
+            columns: ["supersedes_entry_id"]
+            isOneToOne: false
+            referencedRelation: "event_control_log_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_control_roles: {
+        Row: {
+          active: boolean
+          call_sign: string | null
+          contact_details: string | null
+          created_at: string
+          created_by: string | null
+          event_id: string
+          id: string
+          role_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          call_sign?: string | null
+          contact_details?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_id: string
+          id?: string
+          role_name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          call_sign?: string | null
+          contact_details?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_id?: string
+          id?: string
+          role_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_control_roles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_control_roles_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_control_roles_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "v_upcoming_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_control_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_control_sessions: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          event_id: string
+          handover_notes: string | null
+          id: string
+          opened_at: string | null
+          opened_by: string | null
+          status: Database["public"]["Enums"]["control_session_status"]
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          event_id: string
+          handover_notes?: string | null
+          id?: string
+          opened_at?: string | null
+          opened_by?: string | null
+          status?: Database["public"]["Enums"]["control_session_status"]
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          event_id?: string
+          handover_notes?: string | null
+          id?: string
+          opened_at?: string | null
+          opened_by?: string | null
+          status?: Database["public"]["Enums"]["control_session_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_control_sessions_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_control_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_control_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "v_upcoming_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_control_sessions_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_members: {
         Row: {
           created_at: string
@@ -684,6 +895,177 @@ export type Database = {
           },
         ]
       }
+      incident_actions: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          completed_by: string | null
+          completion_note: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_at: string | null
+          event_id: string
+          id: string
+          incident_id: string | null
+          priority: Database["public"]["Enums"]["incident_action_priority"]
+          status: Database["public"]["Enums"]["incident_action_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_note?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_at?: string | null
+          event_id: string
+          id?: string
+          incident_id?: string | null
+          priority?: Database["public"]["Enums"]["incident_action_priority"]
+          status?: Database["public"]["Enums"]["incident_action_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_note?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_at?: string | null
+          event_id?: string
+          id?: string
+          incident_id?: string | null
+          priority?: Database["public"]["Enums"]["incident_action_priority"]
+          status?: Database["public"]["Enums"]["incident_action_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_actions_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_actions_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_actions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_actions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_actions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "v_upcoming_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_actions_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incident_attachments: {
+        Row: {
+          caption: string | null
+          captured_at: string | null
+          created_at: string
+          event_id: string
+          evidence_type: string
+          file_name: string
+          file_size: number
+          file_storage_path: string
+          id: string
+          incident_id: string
+          mime_type: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          captured_at?: string | null
+          created_at?: string
+          event_id: string
+          evidence_type?: string
+          file_name: string
+          file_size: number
+          file_storage_path: string
+          id?: string
+          incident_id: string
+          mime_type?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          caption?: string | null
+          captured_at?: string | null
+          created_at?: string
+          event_id?: string
+          evidence_type?: string
+          file_name?: string
+          file_size?: number
+          file_storage_path?: string
+          id?: string
+          incident_id?: string
+          mime_type?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_attachments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_attachments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "v_upcoming_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_attachments_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       incident_log_entries: {
         Row: {
           author_id: string | null
@@ -773,14 +1155,22 @@ export type Database = {
         Row: {
           casualty_count: number
           category: string | null
+          closed_at: string | null
           created_at: string
           created_by: string | null
+          description: string | null
+          emergency_services_call_time: string | null
+          emergency_services_called: boolean
           event_id: string
+          hazard_reference: string | null
           id: string
           incident_commander_id: string | null
           incident_number: string | null
+          last_activity_at: string
           location: string | null
+          reported_via: string | null
           reporter_id: string | null
+          resolution_summary: string | null
           severity: Database["public"]["Enums"]["incident_severity"]
           status: Database["public"]["Enums"]["incident_status"]
           summary: string
@@ -790,14 +1180,22 @@ export type Database = {
         Insert: {
           casualty_count?: number
           category?: string | null
+          closed_at?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
+          emergency_services_call_time?: string | null
+          emergency_services_called?: boolean
           event_id: string
+          hazard_reference?: string | null
           id?: string
           incident_commander_id?: string | null
           incident_number?: string | null
+          last_activity_at?: string
           location?: string | null
+          reported_via?: string | null
           reporter_id?: string | null
+          resolution_summary?: string | null
           severity?: Database["public"]["Enums"]["incident_severity"]
           status?: Database["public"]["Enums"]["incident_status"]
           summary: string
@@ -807,14 +1205,22 @@ export type Database = {
         Update: {
           casualty_count?: number
           category?: string | null
+          closed_at?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
+          emergency_services_call_time?: string | null
+          emergency_services_called?: boolean
           event_id?: string
+          hazard_reference?: string | null
           id?: string
           incident_commander_id?: string | null
           incident_number?: string | null
+          last_activity_at?: string
           location?: string | null
+          reported_via?: string | null
           reporter_id?: string | null
+          resolution_summary?: string | null
           severity?: Database["public"]["Enums"]["incident_severity"]
           status?: Database["public"]["Enums"]["incident_status"]
           summary?: string
@@ -906,6 +1312,58 @@ export type Database = {
           },
         ]
       }
+      methane_message_versions: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          incident_id: string
+          methane_message_id: string
+          revision: number
+          snapshot: Json
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          incident_id: string
+          methane_message_id: string
+          revision: number
+          snapshot: Json
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          incident_id?: string
+          methane_message_id?: string
+          revision?: number
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "methane_message_versions_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "methane_message_versions_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "methane_message_versions_methane_message_id_fkey"
+            columns: ["methane_message_id"]
+            isOneToOne: false
+            referencedRelation: "methane_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       methane_messages: {
         Row: {
           access: string | null
@@ -918,6 +1376,9 @@ export type Database = {
           incident_id: string
           incident_type: string | null
           major_incident_declared: boolean
+          receiving_service: string | null
+          sent_at: string | null
+          sent_by: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -932,6 +1393,9 @@ export type Database = {
           incident_id: string
           incident_type?: string | null
           major_incident_declared?: boolean
+          receiving_service?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -946,6 +1410,9 @@ export type Database = {
           incident_id?: string
           incident_type?: string | null
           major_incident_declared?: boolean
+          receiving_service?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -955,6 +1422,13 @@ export type Database = {
             columns: ["incident_id"]
             isOneToOne: true
             referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "methane_messages_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1021,6 +1495,73 @@ export type Database = {
           },
         ]
       }
+      operational_locations: {
+        Row: {
+          access_notes: string | null
+          active: boolean
+          created_at: string
+          created_by: string | null
+          description: string | null
+          event_id: string
+          grid_reference: string | null
+          id: string
+          location_type: string
+          name: string
+          updated_at: string
+          what3words: string | null
+        }
+        Insert: {
+          access_notes?: string | null
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          event_id: string
+          grid_reference?: string | null
+          id?: string
+          location_type: string
+          name: string
+          updated_at?: string
+          what3words?: string | null
+        }
+        Update: {
+          access_notes?: string | null
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          event_id?: string
+          grid_reference?: string | null
+          id?: string
+          location_type?: string
+          name?: string
+          updated_at?: string
+          what3words?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_locations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operational_locations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operational_locations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "v_upcoming_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organisations: {
         Row: {
           created_at: string
@@ -1062,36 +1603,206 @@ export type Database = {
           },
         ]
       }
-      resources: {
+      radio_channels: {
         Row: {
-          call_sign: string | null
+          active: boolean
+          channel_name: string
           created_at: string
           created_by: string | null
           event_id: string
+          frequency_or_talkgroup: string | null
           id: string
+          notes: string | null
+          purpose: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          channel_name: string
+          created_at?: string
+          created_by?: string | null
+          event_id: string
+          frequency_or_talkgroup?: string | null
+          id?: string
+          notes?: string | null
+          purpose?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          channel_name?: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string
+          frequency_or_talkgroup?: string | null
+          id?: string
+          notes?: string | null
+          purpose?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "radio_channels_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "radio_channels_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "radio_channels_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "v_upcoming_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      radio_messages: {
+        Row: {
+          author_id: string | null
+          body: string
+          created_at: string
+          direction: Database["public"]["Enums"]["radio_message_direction"]
+          event_id: string
+          from_call_sign: string | null
+          id: string
+          incident_id: string | null
+          radio_channel_id: string | null
+          supersedes_entry_id: string | null
+          time: string
+          to_call_sign: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          created_at?: string
+          direction?: Database["public"]["Enums"]["radio_message_direction"]
+          event_id: string
+          from_call_sign?: string | null
+          id?: string
+          incident_id?: string | null
+          radio_channel_id?: string | null
+          supersedes_entry_id?: string | null
+          time?: string
+          to_call_sign?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          direction?: Database["public"]["Enums"]["radio_message_direction"]
+          event_id?: string
+          from_call_sign?: string | null
+          id?: string
+          incident_id?: string | null
+          radio_channel_id?: string | null
+          supersedes_entry_id?: string | null
+          time?: string
+          to_call_sign?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "radio_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "radio_messages_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "radio_messages_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "v_upcoming_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "radio_messages_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "radio_messages_radio_channel_id_fkey"
+            columns: ["radio_channel_id"]
+            isOneToOne: false
+            referencedRelation: "radio_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "radio_messages_supersedes_entry_id_fkey"
+            columns: ["supersedes_entry_id"]
+            isOneToOne: false
+            referencedRelation: "radio_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resources: {
+        Row: {
+          assigned_to: string | null
+          call_sign: string | null
+          contact_details: string | null
+          created_at: string
+          created_by: string | null
+          deployed_at: string | null
+          event_id: string
+          id: string
+          incident_id: string | null
           location: string | null
+          notes: string | null
+          quantity: number
+          released_at: string | null
           status: string | null
           type: string
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
           call_sign?: string | null
+          contact_details?: string | null
           created_at?: string
           created_by?: string | null
+          deployed_at?: string | null
           event_id: string
           id?: string
+          incident_id?: string | null
           location?: string | null
+          notes?: string | null
+          quantity?: number
+          released_at?: string | null
           status?: string | null
           type: string
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
           call_sign?: string | null
+          contact_details?: string | null
           created_at?: string
           created_by?: string | null
+          deployed_at?: string | null
           event_id?: string
           id?: string
+          incident_id?: string | null
           location?: string | null
+          notes?: string | null
+          quantity?: number
+          released_at?: string | null
           status?: string | null
           type?: string
           updated_at?: string
@@ -1116,6 +1827,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "v_upcoming_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resources_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
             referencedColumns: ["id"]
           },
         ]
@@ -1244,36 +1962,57 @@ export type Database = {
       }
       welfare_records: {
         Row: {
+          age_band: string | null
+          casualty_reference: string | null
           casualty_status: string | null
           created_at: string
           created_by: string | null
+          disposition: string | null
           event_id: string
+          handed_over_to: string | null
+          handover_time: string | null
           id: string
           incident_id: string | null
           medical_notes: string | null
+          next_of_kin_contacted: boolean
           person_details: Json
+          triage_category: string | null
           updated_at: string
         }
         Insert: {
+          age_band?: string | null
+          casualty_reference?: string | null
           casualty_status?: string | null
           created_at?: string
           created_by?: string | null
+          disposition?: string | null
           event_id: string
+          handed_over_to?: string | null
+          handover_time?: string | null
           id?: string
           incident_id?: string | null
           medical_notes?: string | null
+          next_of_kin_contacted?: boolean
           person_details?: Json
+          triage_category?: string | null
           updated_at?: string
         }
         Update: {
+          age_band?: string | null
+          casualty_reference?: string | null
           casualty_status?: string | null
           created_at?: string
           created_by?: string | null
+          disposition?: string | null
           event_id?: string
+          handed_over_to?: string | null
+          handover_time?: string | null
           id?: string
           incident_id?: string | null
           medical_notes?: string | null
+          next_of_kin_contacted?: boolean
           person_details?: Json
+          triage_category?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1475,6 +2214,7 @@ export type Database = {
       account_type: "staff" | "client" | "pending"
       client_request_status: "open" | "fulfilled"
       client_request_type: "information" | "file_upload"
+      control_session_status: "standby" | "active" | "closed"
       document_output_format: "a4" | "a3" | "a2" | "a6" | "presentation" | "web"
       document_status:
         | "draft"
@@ -1490,11 +2230,19 @@ export type Database = {
         | "planning"
         | "live"
         | "complete"
+      incident_action_priority: "low" | "normal" | "high" | "critical"
+      incident_action_status:
+        | "open"
+        | "in_progress"
+        | "blocked"
+        | "complete"
+        | "cancelled"
       incident_log_entry_type: "update" | "decision" | "action" | "correction"
       incident_severity: "minor" | "moderate" | "serious" | "critical"
       incident_status: "open" | "monitoring" | "resolved" | "closed"
       knowledge_block_approval_status: "draft" | "approved" | "superseded"
       milestone_status: "not_started" | "on_track" | "at_risk" | "complete"
+      radio_message_direction: "inbound" | "outbound" | "internal"
       relationship_status: "prospect" | "active" | "past"
       staff_role: "admin" | "manager" | "control_room" | "field"
       task_priority: "low" | "medium" | "high" | "urgent"
@@ -1630,6 +2378,7 @@ export const Constants = {
       account_type: ["staff", "client", "pending"],
       client_request_status: ["open", "fulfilled"],
       client_request_type: ["information", "file_upload"],
+      control_session_status: ["standby", "active", "closed"],
       document_output_format: ["a4", "a3", "a2", "a6", "presentation", "web"],
       document_status: [
         "draft",
@@ -1647,11 +2396,20 @@ export const Constants = {
         "live",
         "complete",
       ],
+      incident_action_priority: ["low", "normal", "high", "critical"],
+      incident_action_status: [
+        "open",
+        "in_progress",
+        "blocked",
+        "complete",
+        "cancelled",
+      ],
       incident_log_entry_type: ["update", "decision", "action", "correction"],
       incident_severity: ["minor", "moderate", "serious", "critical"],
       incident_status: ["open", "monitoring", "resolved", "closed"],
       knowledge_block_approval_status: ["draft", "approved", "superseded"],
       milestone_status: ["not_started", "on_track", "at_risk", "complete"],
+      radio_message_direction: ["inbound", "outbound", "internal"],
       relationship_status: ["prospect", "active", "past"],
       staff_role: ["admin", "manager", "control_room", "field"],
       task_priority: ["low", "medium", "high", "urgent"],

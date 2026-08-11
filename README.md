@@ -108,11 +108,13 @@ comments for detail):
   portal-enabled events belonging to their organisation, client-visible
   milestones and documents, their own requests, and messages explicitly
   shared with the client (`0012_client_portal.sql`).
-- **Incident management is append-first and realtime.** Incident numbers are
-  generated atomically per event, log corrections supersede rather than edit
-  earlier entries, and incidents, logs, decisions, resources, and M/ETHANE
-  panels update through authenticated Realtime subscriptions
-  (`0013_incident_management.sql` onwards).
+- **Event Control is event-scoped, append-first, and realtime.** The nearest
+  event leads the incident workspace. Each event has a live control session,
+  command-role roster, operational locations, incident/action register,
+  event log, resources, radio channels and traffic. Incident numbers are
+  generated atomically per event and corrections supersede rather than edit
+  earlier entries. Authenticated Realtime subscriptions refresh operational
+  panels while restricted welfare data deliberately stays off Realtime.
 - **Welfare records are restricted by RLS** to admins, managers, and control
   room users. Field users cannot query those rows even if they call the API
   directly.
@@ -130,9 +132,11 @@ is linked).
   approval workflow, private storage, signed downloads, and client sharing.
 - Organisation-scoped client portal with event overview, milestones, shared
   documents, requests, and client/staff messaging.
-- Live incident register with severity/status controls, contemporaneous log
-  and corrections, decisions, resources, restricted welfare records, and
-  M/ETHANE reporting.
+- Full event incident control: closest-event-first command dashboard, control
+  sessions and role assignments, append-only event/incident logs, actions,
+  decisions, resource deployment, radio traffic, operational locations,
+  restricted casualty/welfare records, versioned M/ETHANE messages, private
+  evidence uploads, signed downloads, and CSV audit exports.
 
 Production rollout still requires organisation-specific operational work:
 transactional email configuration, accessibility and load testing against the

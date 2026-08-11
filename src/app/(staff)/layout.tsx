@@ -73,13 +73,13 @@ export default async function StaffLayout({ children }: { children: React.ReactN
         </div>
       </aside>
 
-      <div className="flex min-h-screen flex-1 flex-col md:ml-56">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col md:ml-56">
         <StaffHeader
           staffRole={profile.staff_role}
           fullName={displayName}
           roleLabel={roleLabel}
         />
-        <main className="flex-1 overflow-x-hidden bg-[#fafafa] p-3.5 md:p-5">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden bg-[#fafafa] p-3.5 md:p-5">{children}</main>
       </div>
     </div>
   );

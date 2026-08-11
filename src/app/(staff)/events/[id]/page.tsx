@@ -509,14 +509,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                 <Siren className="size-3.5 text-tide-teal" />
                 Incidents
               </CardTitle>
-              <Button
-                render={<Link href={`/incidents/new?event_id=${id}`} />}
-                nativeButton={false}
-                size="sm"
-                variant="outline"
-              >
-                Report incident
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button render={<Link href={`/incidents/control/${id}`} />} nativeButton={false} size="sm">
+                  Open Event Control
+                </Button>
+                <Button
+                  render={<Link href={`/incidents/new?event_id=${id}`} />}
+                  nativeButton={false}
+                  size="sm"
+                  variant="outline"
+                >
+                  Report incident
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               {incidents?.length ? (
