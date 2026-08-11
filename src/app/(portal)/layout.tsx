@@ -5,7 +5,11 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { TideLogo } from "@/components/tide-logo";
-import { EntityReference } from "@/components/entity-reference";
+
+export const metadata = {
+  title: "Client Portal | Tide Events Group",
+  description: "Your Tide Events Group event workspace, documents, approvals and correspondence.",
+};
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -16,34 +20,24 @@ export default async function PortalLayout({ children }: { children: React.React
   const { data: profile } = user
     ? await supabase
         .from("user_profiles")
-        .select("account_type, full_name, organisations(name, client_reference)")
+        .select("account_type, full_name")
         .eq("id", user.id)
         .maybeSingle()
     : { data: null };
 
   if (profile?.account_type === "pending") redirect("/account-pending");
 
-  const organisation = profile?.organisations as { name: string; client_reference: string } | null;
-  const orgName = organisation?.name;
-  const isStaffPreview = profile?.account_type !== "client";
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="flex h-[72px] flex-shrink-0 items-center justify-between border-b border-white/10 bg-tide-charcoal px-4 text-white md:px-8">
-        <Link href="/portal" className="flex items-center gap-3">
-          <TideLogo variant="dark" height={22} />
-          <span className="hidden border-l border-white/15 pl-3 text-sm font-semibold text-white/65 sm:inline">
-            Client portal{orgName ? ` · ${orgName}` : ""}
+      <header className="flex h-[88px] flex-shrink-0 items-center justify-between border-b border-white/10 bg-tide-charcoal px-5 text-white md:px-8">
+        <Link href="/portal" className="flex items-center gap-4">
+          <TideLogo variant="dark" height={36} />
+          <span className="hidden border-l border-white/15 py-1 pl-4 text-sm font-semibold text-white/65 sm:inline">
+            Client portal
           </span>
-          {isStaffPreview && (
-            <span className="rounded-full bg-tide-teal px-2.5 py-1 text-[10px] font-bold tracking-[0.08em] text-tide-charcoal uppercase">
-              Staff preview
-            </span>
-          )}
-          <EntityReference label="Client ID" value={organisation?.client_reference} inverse className="hidden sm:inline-flex" />
         </Link>
         <div className="flex items-center gap-3">
-          <span className="hidden text-sm text-white/60 sm:inline">{profile?.full_name ?? "Portal preview"}</span>
+          <span className="hidden text-sm text-white/60 sm:inline">{profile?.full_name ?? "My account"}</span>
           <form action={signOut}>
             <Button type="submit" variant="ghost" size="icon-sm" aria-label="Sign out" className="text-white/60 hover:bg-white/10 hover:text-white">
               <LogOut className="size-4" />

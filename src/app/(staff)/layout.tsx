@@ -45,8 +45,8 @@ export default async function StaffLayout({ children }: { children: React.ReactN
         Skip to main content
       </a>
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-tide-charcoal text-white shadow-[8px_0_32px_rgba(23,23,23,0.06)] md:flex">
-        <div className="flex h-[84px] flex-shrink-0 flex-col justify-center gap-2 border-b border-white/[0.08] px-5">
-          <TideLogo variant="dark" height={21} />
+        <div className="flex h-[100px] flex-shrink-0 flex-col justify-center gap-2.5 border-b border-white/[0.08] px-5">
+          <TideLogo variant="dark" height={32} />
           <div className="truncate text-[10px] font-bold tracking-[0.16em] text-tide-teal uppercase">
             Business &amp; Operations
           </div>

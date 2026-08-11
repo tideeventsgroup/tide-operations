@@ -76,8 +76,9 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Staff may open portal routes in clearly labelled preview mode. The
-    // portal layout and database RLS continue to enforce the viewer's role.
+    // Staff may open the client-facing portal for support and verification.
+    // The portal uses client language throughout while RLS continues to
+    // enforce the signed-in viewer's actual permissions.
   }
 
   return supabaseResponse;
