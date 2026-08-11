@@ -2613,6 +2613,89 @@ export type Database = {
           },
         ]
       }
+      system_settings: {
+        Row: {
+          accounts_email: string | null
+          brand_accent: string
+          brand_primary: string
+          company_name: string
+          created_at: string
+          dark_logo_url: string
+          default_currency: string
+          default_vat_rate: number
+          id: string
+          invoice_due_days: number
+          legal_name: string
+          light_logo_url: string
+          operations_email: string
+          phone: string | null
+          portal_welcome_message: string
+          postal_address: string | null
+          quote_valid_days: number
+          registration_number: string | null
+          updated_at: string
+          updated_by: string | null
+          vat_number: string | null
+          website: string | null
+        }
+        Insert: {
+          accounts_email?: string | null
+          brand_accent?: string
+          brand_primary?: string
+          company_name?: string
+          created_at?: string
+          dark_logo_url?: string
+          default_currency?: string
+          default_vat_rate?: number
+          id?: string
+          invoice_due_days?: number
+          legal_name?: string
+          light_logo_url?: string
+          operations_email?: string
+          phone?: string | null
+          portal_welcome_message?: string
+          postal_address?: string | null
+          quote_valid_days?: number
+          registration_number?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          vat_number?: string | null
+          website?: string | null
+        }
+        Update: {
+          accounts_email?: string | null
+          brand_accent?: string
+          brand_primary?: string
+          company_name?: string
+          created_at?: string
+          dark_logo_url?: string
+          default_currency?: string
+          default_vat_rate?: number
+          id?: string
+          invoice_due_days?: number
+          legal_name?: string
+          light_logo_url?: string
+          operations_email?: string
+          phone?: string | null
+          portal_welcome_message?: string
+          postal_address?: string | null
+          quote_valid_days?: number
+          registration_number?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          vat_number?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           created_at: string
@@ -2965,6 +3048,10 @@ export type Database = {
       has_event_access: { Args: { p_event_id: string }; Returns: boolean }
       has_event_client_access: {
         Args: { p_event_id: string }
+        Returns: boolean
+      }
+      has_client_organisation_access: {
+        Args: { p_organisation_id: string }
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }

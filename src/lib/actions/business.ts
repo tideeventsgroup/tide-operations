@@ -47,6 +47,21 @@ async function getDefaultTerms(supabase: Awaited<ReturnType<typeof createClient>
   return data?.body ?? null;
 }
 
+async function getSystemDefaults(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { data } = await supabase
+    .from("system_settings")
+    .select("default_currency, default_vat_rate, quote_valid_days, invoice_due_days")
+    .eq("id", "default")
+    .maybeSingle();
+  return data ?? { default_currency: "GBP", default_vat_rate: 20, quote_valid_days: 30, invoice_due_days: 14 };
+}
+
+function dateAfter(days: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 function refreshCommercial(entityPath?: string, eventId?: string | null, organisationId?: string | null) {
   revalidatePath("/business");
   if (entityPath) revalidatePath(entityPath);
@@ -95,7 +110,7 @@ export async function updateOpportunity(formData: FormData) {
 
 export async function createProposal(formData: FormData) {
   const { supabase, user } = await managerClient();
-  const defaultTerms = await getDefaultTerms(supabase);
+  const [defaultTerms, defaults] = await Promise.all([getDefaultTerms(supabase), getSystemDefaults(supabase)]);
   const organisationId = requiredText.parse(formData.get("organisation_id"));
   const { data, error } = await supabase.from("proposals").insert({
     organisation_id: organisationId,
@@ -108,7 +123,7 @@ export async function createProposal(formData: FormData) {
     scope: optionalText(formData.get("scope")),
     assumptions: optionalText(formData.get("assumptions")),
     terms: optionalText(formData.get("terms")) ?? defaultTerms,
-    valid_until: optionalDate(formData.get("valid_until")),
+    valid_until: optionalDate(formData.get("valid_until")) ?? dateAfter(defaults.quote_valid_days),
     created_by: user.id,
   }).select("id, event_id").single();
   if (error) throw new Error(error.message);
@@ -138,7 +153,7 @@ export async function updateProposal(formData: FormData) {
 
 export async function createQuote(formData: FormData) {
   const { supabase, user } = await managerClient();
-  const defaultTerms = await getDefaultTerms(supabase);
+  const [defaultTerms, defaults] = await Promise.all([getDefaultTerms(supabase), getSystemDefaults(supabase)]);
   const organisationId = requiredText.parse(formData.get("organisation_id"));
   const { data, error } = await supabase.from("quotes").insert({
     organisation_id: organisationId,
@@ -146,7 +161,8 @@ export async function createQuote(formData: FormData) {
     opportunity_id: optionalText(formData.get("opportunity_id")),
     title: requiredText.parse(formData.get("title")),
     issue_date: optionalDate(formData.get("issue_date")) ?? new Date().toISOString().slice(0, 10),
-    valid_until: optionalDate(formData.get("valid_until")),
+    valid_until: optionalDate(formData.get("valid_until")) ?? dateAfter(defaults.quote_valid_days),
+    currency: defaults.default_currency,
     notes: optionalText(formData.get("notes")),
     terms: optionalText(formData.get("terms")) ?? defaultTerms,
     created_by: user.id,
@@ -199,7 +215,7 @@ export async function deleteQuoteItem(formData: FormData) {
 
 export async function createInvoice(formData: FormData) {
   const { supabase, user } = await managerClient();
-  const defaultTerms = await getDefaultTerms(supabase);
+  const [defaultTerms, defaults] = await Promise.all([getDefaultTerms(supabase), getSystemDefaults(supabase)]);
   const organisationId = requiredText.parse(formData.get("organisation_id"));
   const { data, error } = await supabase.from("invoices").insert({
     organisation_id: organisationId,
@@ -207,7 +223,8 @@ export async function createInvoice(formData: FormData) {
     quote_id: optionalText(formData.get("quote_id")),
     title: requiredText.parse(formData.get("title")),
     issue_date: optionalDate(formData.get("issue_date")) ?? new Date().toISOString().slice(0, 10),
-    due_date: optionalDate(formData.get("due_date")),
+    due_date: optionalDate(formData.get("due_date")) ?? dateAfter(defaults.invoice_due_days),
+    currency: defaults.default_currency,
     notes: optionalText(formData.get("notes")),
     payment_terms: optionalText(formData.get("payment_terms")) ?? defaultTerms,
     created_by: user.id,
@@ -219,7 +236,7 @@ export async function createInvoice(formData: FormData) {
 
 export async function createInvoiceFromQuote(formData: FormData) {
   const { supabase, user } = await managerClient();
-  const defaultTerms = await getDefaultTerms(supabase);
+  const [defaultTerms, defaults] = await Promise.all([getDefaultTerms(supabase), getSystemDefaults(supabase)]);
   const quoteId = requiredText.parse(formData.get("quote_id"));
   const { data: quote, error: quoteError } = await supabase.from("quotes").select("*, quote_items(*)").eq("id", quoteId).single();
   if (quoteError) throw new Error(quoteError.message);
@@ -229,6 +246,8 @@ export async function createInvoiceFromQuote(formData: FormData) {
     quote_id: quote.id,
     title: quote.title,
     issue_date: new Date().toISOString().slice(0, 10),
+    due_date: dateAfter(defaults.invoice_due_days),
+    currency: quote.currency,
     payment_terms: defaultTerms,
     created_by: user.id,
   }).select("id").single();
@@ -354,6 +373,7 @@ export async function createBusinessService(formData: FormData) {
   const { error } = await supabase.from("business_services").insert({ code: requiredText.parse(formData.get("code")).toUpperCase().replace(/[^A-Z0-9-]/g, ""), name: requiredText.parse(formData.get("name")), category: requiredText.parse(formData.get("category")), description: requiredText.parse(formData.get("description")), unit_label: requiredText.parse(formData.get("unit_label")), default_unit_price: money(formData.get("default_unit_price")), tax_rate: money(formData.get("tax_rate")), created_by: user.id });
   if (error) throw new Error(error.message);
   revalidatePath("/business/library");
+  revalidatePath("/admin/commercial");
 }
 
 export async function updateBusinessService(formData: FormData) {
@@ -362,6 +382,7 @@ export async function updateBusinessService(formData: FormData) {
   const { error } = await supabase.from("business_services").update({ name: requiredText.parse(formData.get("name")), category: requiredText.parse(formData.get("category")), description: requiredText.parse(formData.get("description")), unit_label: requiredText.parse(formData.get("unit_label")), default_unit_price: money(formData.get("default_unit_price")), tax_rate: money(formData.get("tax_rate")), active: formData.get("active") === "on" }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/business/library");
+  revalidatePath("/admin/commercial");
 }
 
 export async function updateTermsTemplate(formData: FormData) {
@@ -370,6 +391,7 @@ export async function updateTermsTemplate(formData: FormData) {
   const { error } = await supabase.from("commercial_terms_templates").update({ body: z.string().trim().min(100).parse(formData.get("body")) }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/business/library");
+  revalidatePath("/admin/commercial");
 }
 
 export async function acceptClientQuote(formData: FormData) {

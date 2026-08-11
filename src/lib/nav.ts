@@ -4,10 +4,9 @@ import {
   Building2,
   ListChecks,
   BookOpen,
-  Users,
-  FileCog,
   Siren,
   BriefcaseBusiness,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 import type { Database } from "@/lib/supabase/types";
@@ -32,8 +31,7 @@ export const staffNavItems: NavItem[] = [
 ];
 
 export const adminNavItems: NavItem[] = [
-  { label: "Users & Roles", href: "/admin/users", icon: Users },
-  { label: "Document Types", href: "/admin/document-types", icon: FileCog },
+  { label: "Admin Settings", href: "/admin", icon: Settings },
 ];
 
 export function visibleAdminNavItems(staffRole: StaffRole | null) {
