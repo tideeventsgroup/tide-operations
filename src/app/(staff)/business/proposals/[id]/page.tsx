@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Download, FileText, Trash2 } from "lucide-react";
+import { ArrowLeft, Download, FileText, Settings2, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { addProposalService, deleteProposalService, updateProposal } from "@/lib/actions/business";
 import { Button } from "@/components/ui/button";
@@ -49,19 +49,21 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="border-b"><CardTitle>Issue and publish</CardTitle></CardHeader>
+      <Card className="h-fit">
+        <CardHeader className="border-b"><CardTitle className="flex items-center gap-2"><Settings2 className="size-4 text-tide-teal" />Proposal controls</CardTitle></CardHeader>
         <CardContent><form action={updateProposal} className="space-y-4">
           <input type="hidden" name="id" value={proposal.id} />
           <div className="space-y-1.5"><Label htmlFor="status">Status</Label><select id="status" name="status" defaultValue={proposal.status} className="h-10 w-full rounded-lg border border-input bg-white px-3 text-sm">{proposalStatuses.map((status) => <option key={status} value={status}>{humanise(status)}</option>)}</select></div>
           <label className="flex items-start gap-3 rounded-lg border bg-[#f8f9f9] p-3"><input type="checkbox" name="client_visible" defaultChecked={proposal.client_visible} className="mt-1 size-4" /><span><strong className="block text-sm">Show in client portal</strong><small className="text-muted-foreground">Only published proposals are visible to this client.</small></span></label>
           <div className="space-y-1.5"><Label htmlFor="valid_until">Valid until</Label><Input id="valid_until" name="valid_until" type="date" defaultValue={proposal.valid_until ?? ""} /></div>
           <div className="space-y-1.5"><Label htmlFor="accepted_by_name">Accepted by</Label><Input id="accepted_by_name" name="accepted_by_name" defaultValue={proposal.accepted_by_name ?? ""} /></div>
-          <div className="space-y-1.5"><Label htmlFor="summary">Summary</Label><Textarea id="summary" name="summary" rows={4} defaultValue={proposal.summary ?? ""} /></div>
-          <div className="space-y-1.5"><Label htmlFor="scope">Scope</Label><Textarea id="scope" name="scope" rows={7} defaultValue={proposal.scope ?? ""} /></div>
-          <div className="space-y-1.5"><Label htmlFor="assumptions">Assumptions</Label><Textarea id="assumptions" name="assumptions" rows={4} defaultValue={proposal.assumptions ?? ""} /></div>
-          <div className="space-y-1.5"><Label htmlFor="terms">Full terms and conditions</Label><Textarea id="terms" name="terms" rows={16} defaultValue={proposal.terms ?? ""} /></div>
-          <Button type="submit">Save proposal</Button>
+          <details className="rounded-lg border"><summary className="cursor-pointer list-none px-3 py-2.5 text-sm font-semibold marker:hidden">Edit proposal content</summary><div className="space-y-4 border-t p-3">
+            <div className="space-y-1.5"><Label htmlFor="summary">Summary</Label><Textarea id="summary" name="summary" rows={4} defaultValue={proposal.summary ?? ""} /></div>
+            <div className="space-y-1.5"><Label htmlFor="scope">Scope</Label><Textarea id="scope" name="scope" rows={7} defaultValue={proposal.scope ?? ""} /></div>
+            <div className="space-y-1.5"><Label htmlFor="assumptions">Assumptions</Label><Textarea id="assumptions" name="assumptions" rows={4} defaultValue={proposal.assumptions ?? ""} /></div>
+            <div className="space-y-1.5"><Label htmlFor="terms">Full terms and conditions</Label><Textarea id="terms" name="terms" rows={12} defaultValue={proposal.terms ?? ""} /></div>
+          </div></details>
+          <Button type="submit" className="w-full">Save proposal</Button>
         </form></CardContent>
       </Card>
     </div>
