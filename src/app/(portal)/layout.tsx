@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LogOut } from "lucide-react";
+import { LayoutDashboard, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,10 @@ export default async function PortalLayout({ children }: { children: React.React
             Client portal
           </span>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Button render={<Link href="/portal" />} nativeButton={false} variant="ghost" size="sm" className="hidden text-white/65 hover:bg-white/10 hover:text-white sm:inline-flex">
+            <LayoutDashboard className="size-4" /> Dashboard
+          </Button>
           <span className="hidden text-sm text-white/60 sm:inline">{profile?.full_name ?? "My account"}</span>
           <form action={signOut}>
             <Button type="submit" variant="ghost" size="icon-sm" aria-label="Sign out" className="text-white/60 hover:bg-white/10 hover:text-white">
@@ -45,7 +48,7 @@ export default async function PortalLayout({ children }: { children: React.React
           </form>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-7 md:px-8 md:py-10">{children}</main>
+      <main className="mx-auto w-full max-w-[1240px] flex-1 px-4 py-7 md:px-8 md:py-10">{children}</main>
     </div>
   );
 }
