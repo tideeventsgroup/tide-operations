@@ -17,7 +17,7 @@ export function TaskStatusSelect({ taskId, status }: { taskId: string; status: s
         name="status"
         defaultValue={status}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
-        className="h-7 rounded-md border border-input bg-background px-1 text-xs"
+        className="h-7 shrink-0 rounded-md border border-input bg-background px-1.5 text-[11px]"
       >
         {COLUMNS.map((c) => (
           <option key={c.status} value={c.status}>

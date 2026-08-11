@@ -1,4 +1,4 @@
-import { BrandMark } from "@/components/brand-mark";
+import { TideLogo } from "@/components/tide-logo";
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
@@ -21,13 +21,10 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           ))}
         </svg>
 
-        <div className="relative flex items-center gap-3">
-          <BrandMark className="size-10 shrink-0" />
-          <div className="leading-tight">
-            <div className="text-base font-bold tracking-tight">Tide Events Group</div>
-            <div className="text-[11px] font-semibold tracking-[0.12em] text-tide-teal uppercase">
-              Operations System
-            </div>
+        <div className="relative flex flex-col items-start gap-2">
+          <TideLogo variant="dark" height={30} />
+          <div className="text-[12px] font-semibold tracking-[0.12em] text-tide-teal uppercase">
+            Operations System
           </div>
         </div>
 
@@ -48,13 +45,10 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex flex-1 items-center justify-center bg-[#fafafa] px-4 py-12">
         <div className="w-full max-w-sm">
-          <div className="mb-6 flex items-center gap-2.5 lg:hidden">
-            <BrandMark className="size-8 shrink-0" />
-            <div className="leading-tight">
-              <div className="text-sm font-bold text-tide-charcoal">Tide Events Group</div>
-              <div className="text-[10px] font-semibold tracking-[0.1em] text-tide-teal uppercase">
-                Operations System
-              </div>
+          <div className="mb-6 flex flex-col items-start gap-1.5 lg:hidden">
+            <TideLogo variant="light" height={24} />
+            <div className="text-[11px] font-semibold tracking-[0.1em] text-tide-teal uppercase">
+              Operations System
             </div>
           </div>
           {children}

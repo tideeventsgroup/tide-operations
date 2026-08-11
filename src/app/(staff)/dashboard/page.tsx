@@ -8,12 +8,14 @@ import { StatCard } from "@/components/stat-card";
 import { EmptyState } from "@/components/empty-state";
 import { StageBadge, DocumentStatusBadge } from "@/components/status-badges";
 import { Badge } from "@/components/ui/badge";
+import { NextEventCard } from "@/components/next-event-card";
 
 type DashboardEvent = {
   id: string;
   name: string;
   venue: string | null;
   start_date: string | null;
+  end_date: string | null;
   stage: string;
   organisation_name: string | null;
 };
@@ -23,6 +25,7 @@ type ReviewQueueItem = {
   reference: string | null;
   title: string;
   status: string;
+  event_id: string | null;
   event_name: string | null;
 };
 
@@ -32,6 +35,7 @@ type OpenTask = {
   status: string;
   priority: string;
   due_date: string | null;
+  event_id: string | null;
   event_name: string | null;
 };
 
@@ -66,11 +70,46 @@ export default async function DashboardPage() {
     approval_requests_count: 0,
   }) as DashboardSnapshot;
 
+  const nextEvent = snapshot.upcoming_events[0] ?? null;
+  const otherEvents = snapshot.upcoming_events.slice(1);
+
+  let nextEventOpenTasks = 0;
+  let nextEventReviewCount = 0;
+  if (nextEvent) {
+    const [{ count: taskCount }, { count: reviewCount }] = await Promise.all([
+      supabase
+        .from("tasks")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", nextEvent.id)
+        .neq("status", "complete"),
+      supabase
+        .from("documents")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", nextEvent.id)
+        .in("status", ["in_review", "needs_updates"]),
+    ]);
+    nextEventOpenTasks = taskCount ?? 0;
+    nextEventReviewCount = reviewCount ?? 0;
+  }
+
   return (
     <div className="mx-auto max-w-6xl">
       <PageHeader title="Dashboard" description="Operational overview across every event you have access to." />
 
       {error && <p className="mb-4 text-sm text-destructive">Couldn&apos;t load dashboard data: {error.message}</p>}
+
+      {nextEvent ? (
+        <div className="mb-5">
+          <NextEventCard event={nextEvent} openTaskCount={nextEventOpenTasks} reviewCount={nextEventReviewCount} />
+        </div>
+      ) : (
+        <EmptyState
+          icon={CalendarDays}
+          title="No upcoming events"
+          description="Events you're assigned to will appear here as soon as they're scheduled."
+          className="mb-5"
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Active events" value={activeEventsCount ?? 0} href="/events" icon={Zap} />
@@ -94,22 +133,22 @@ export default async function DashboardPage() {
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card className="gap-0 py-0">
           <CardHeader className="border-b py-2.5">
-            <CardTitle className="flex items-center gap-1.5 text-[13px]">
+            <CardTitle className="flex items-center gap-1.5 text-sm">
               <CalendarDays className="size-3.5 text-tide-teal" />
-              Upcoming events
+              Then coming up
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {snapshot.upcoming_events.length ? (
+            {otherEvents.length ? (
               <Table>
                 <TableBody>
-                  {snapshot.upcoming_events.map((event) => (
+                  {otherEvents.map((event) => (
                     <TableRow key={event.id}>
                       <TableCell className="font-medium text-tide-charcoal">
                         <Link href={`/events/${event.id}`} className="block">
                           {event.name}
                         </Link>
-                        <span className="block text-[11.5px] font-normal text-muted-foreground">
+                        <span className="block text-[12.5px] font-normal text-muted-foreground">
                           {event.organisation_name ?? "No client"} · {event.venue ?? "Venue TBC"}
                         </span>
                       </TableCell>
@@ -123,14 +162,14 @@ export default async function DashboardPage() {
             ) : (
               <EmptyState
                 icon={CalendarDays}
-                title="No upcoming events"
-                description="Events you're assigned to will appear here."
+                title="Nothing else on the horizon"
+                description="Other upcoming events will appear here once scheduled."
                 className="border-none py-8"
               />
             )}
           </CardContent>
           <div className="border-t px-3 py-2">
-            <Link href="/events" className="text-[12px] font-medium text-tide-teal hover:underline">
+            <Link href="/events" className="text-sm font-medium text-tide-teal hover:underline">
               View all events →
             </Link>
           </div>
@@ -138,7 +177,7 @@ export default async function DashboardPage() {
 
         <Card className="gap-0 py-0">
           <CardHeader className="border-b py-2.5">
-            <CardTitle className="flex items-center gap-1.5 text-[13px]">
+            <CardTitle className="flex items-center gap-1.5 text-sm">
               <FileCheck2 className="size-3.5 text-tide-teal" />
               Review queue
             </CardTitle>
@@ -153,7 +192,7 @@ export default async function DashboardPage() {
                         <Link href={`/documents/${doc.id}`} className="block">
                           {doc.title}
                         </Link>
-                        <span className="block text-[11.5px] font-normal text-muted-foreground">
+                        <span className="block text-[12.5px] font-normal text-muted-foreground">
                           {doc.reference ?? "Unreferenced"} · {doc.event_name}
                         </span>
                       </TableCell>
@@ -177,7 +216,7 @@ export default async function DashboardPage() {
 
         <Card className="gap-0 py-0 lg:col-span-2">
           <CardHeader className="border-b py-2.5">
-            <CardTitle className="flex items-center gap-1.5 text-[13px]">
+            <CardTitle className="flex items-center gap-1.5 text-sm">
               <ListChecks className="size-3.5 text-tide-teal" />
               My open tasks
             </CardTitle>
@@ -217,7 +256,7 @@ export default async function DashboardPage() {
             )}
           </CardContent>
           <div className="border-t px-3 py-2">
-            <Link href="/tasks" className="text-[12px] font-medium text-tide-teal hover:underline">
+            <Link href="/tasks" className="text-sm font-medium text-tide-teal hover:underline">
               View task board →
             </Link>
           </div>

@@ -37,7 +37,7 @@ export default async function DocumentTypesPage() {
 
       <Card className="mb-4">
         <CardHeader>
-          <CardTitle className="flex items-center gap-1.5 text-[13px]">
+          <CardTitle className="flex items-center gap-1.5 text-sm">
             <FileCog className="size-3.5 text-tide-teal" />
             New document type
           </CardTitle>
@@ -46,11 +46,11 @@ export default async function DocumentTypesPage() {
           <form action={createDocumentType} className="flex flex-wrap items-end gap-2">
             <div className="space-y-1">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" name="name" placeholder="e.g. Risk Assessment" required className="h-8 w-64 text-[13px]" />
+              <Input id="name" name="name" placeholder="e.g. Risk Assessment" required className="h-8 w-64 text-sm" />
             </div>
             <div className="space-y-1">
               <Label htmlFor="code">Reference code</Label>
-              <Input id="code" name="code" placeholder="e.g. RA" required className="h-8 w-28 text-[13px] uppercase" maxLength={12} />
+              <Input id="code" name="code" placeholder="e.g. RA" required className="h-8 w-28 text-sm uppercase" maxLength={12} />
             </div>
             <Button type="submit" size="sm">
               Add type

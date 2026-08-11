@@ -61,7 +61,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
     <div className="mx-auto max-w-3xl">
       <Link
         href={`/events/${event.id}`}
-        className="mb-3 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-muted-foreground hover:text-tide-charcoal"
+        className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-tide-charcoal"
       >
         <ArrowLeft className="size-3.5" />
         {event.name}
@@ -79,7 +79,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
               </h1>
               <DocumentStatusBadge status={document.status} />
             </div>
-            <p className="mt-0.5 font-mono text-[11.5px] text-muted-foreground">
+            <p className="mt-0.5 font-mono text-[12.5px] text-muted-foreground">
               {document.reference ?? "Unreferenced"} · {documentType?.name ?? "No type"}
             </p>
           </div>
@@ -96,7 +96,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-[13px]">Current file</CardTitle>
+          <CardTitle className="text-sm">Current file</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {currentVersion ? (
@@ -105,8 +105,8 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
                 <FileTypeIcon mimeType={currentVersion.mime_type} className="size-4" strokeWidth={2} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[13px] font-medium text-tide-charcoal">{currentVersion.file_name}</div>
-                <div className="truncate text-[11.5px] text-muted-foreground">
+                <div className="truncate text-sm font-medium text-tide-charcoal">{currentVersion.file_name}</div>
+                <div className="truncate text-[12.5px] text-muted-foreground">
                   Version {currentVersion.version_number} · {formatFileSize(currentVersion.file_size)}
                   {uploader && (
                     <>
@@ -129,14 +129,14 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
             <form action={uploadDocumentVersion} className="flex flex-wrap items-end gap-2 border-t pt-3">
               <input type="hidden" name="document_id" value={id} />
               <div className="flex-1 space-y-1">
-                <label className="text-[11px] font-medium text-muted-foreground">
+                <label className="text-[12px] font-medium text-muted-foreground">
                   {currentVersion ? "Upload new version" : "Upload file"}
                 </label>
                 <input
                   type="file"
                   name="file"
                   required
-                  className="block w-full text-[13px] text-tide-charcoal file:mr-2.5 file:rounded-md file:border-0 file:bg-tide-teal/12 file:px-2.5 file:py-1 file:text-[12px] file:font-medium file:text-tide-teal hover:file:bg-tide-teal/20"
+                  className="block w-full text-sm text-tide-charcoal file:mr-2.5 file:rounded-md file:border-0 file:bg-tide-teal/12 file:px-2.5 file:py-1 file:text-[13px] file:font-medium file:text-tide-teal hover:file:bg-tide-teal/20"
                 />
               </div>
               <Button type="submit" size="sm">
@@ -150,7 +150,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
 
       <Card className="mt-4 gap-0 py-0">
         <CardHeader className="border-b py-2.5">
-          <CardTitle className="flex items-center gap-1.5 text-[13px]">
+          <CardTitle className="flex items-center gap-1.5 text-sm">
             <History className="size-3.5 text-tide-teal" />
             Version history
           </CardTitle>
@@ -166,7 +166,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
                       <span className="flex items-center gap-2 font-medium text-tide-charcoal">
                         Version {v.version_number}
                         {v.id === currentVersion?.id && (
-                          <span className="rounded-full bg-tide-teal/10 px-1.5 py-0.5 text-[9.5px] font-semibold text-tide-teal">
+                          <span className="rounded-full bg-tide-teal/10 px-1.5 py-0.5 text-[10.5px] font-semibold text-tide-teal">
                             Current
                           </span>
                         )}

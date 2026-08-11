@@ -107,6 +107,23 @@ export async function uploadDocumentVersion(formData: FormData) {
   revalidatePath(`/documents/${documentId}`);
 }
 
+export async function toggleDocumentVisibility(formData: FormData) {
+  const supabase = await createClient();
+  const documentId = String(formData.get("document_id"));
+  const eventId = String(formData.get("event_id"));
+  const nextVisible = formData.get("next_visible") === "true";
+
+  const { error } = await supabase
+    .from("documents")
+    .update({ client_visible: nextVisible })
+    .eq("id", documentId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/events/${eventId}`);
+  revalidatePath(`/documents/${documentId}`);
+}
+
 export async function transitionDocument(formData: FormData) {
   const supabase = await createClient();
   const documentId = String(formData.get("document_id"));

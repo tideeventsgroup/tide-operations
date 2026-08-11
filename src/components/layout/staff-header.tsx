@@ -5,7 +5,7 @@ import { Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { StaffSidebarNav } from "@/components/layout/staff-sidebar";
-import { BrandMark } from "@/components/brand-mark";
+import { TideLogo } from "@/components/tide-logo";
 import { signOut } from "@/lib/actions/auth";
 import type { Database } from "@/lib/supabase/types";
 
@@ -30,18 +30,15 @@ export function StaffHeader({
         </SheetTrigger>
         <SheetContent side="left" className="w-64 border-none bg-tide-charcoal p-0 text-white">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
-          <div className="flex h-14 items-center gap-2.5 border-b border-white/[0.08] px-4">
-            <BrandMark className="size-7 shrink-0" />
-            <div className="min-w-0 leading-tight">
-              <div className="truncate text-[13px] font-bold text-white">Tide Events Group</div>
-              <div className="truncate text-[10px] font-semibold tracking-[0.1em] text-tide-teal uppercase">
-                Operations System
-              </div>
+          <div className="flex h-16 flex-col justify-center gap-1.5 border-b border-white/[0.08] px-4">
+            <TideLogo variant="dark" height={18} />
+            <div className="truncate text-[11px] font-semibold tracking-[0.1em] text-tide-teal uppercase">
+              Operations System
             </div>
           </div>
           <StaffSidebarNav staffRole={staffRole} onNavigate={() => setOpen(false)} />
           <div className="flex items-center justify-between gap-2 border-t border-white/[0.08] px-4 py-3">
-            <span className="truncate text-[13px] text-white/70">
+            <span className="truncate text-sm text-white/70">
               {fullName} <span className="text-white/40">· {roleLabel}</span>
             </span>
             <form action={signOut}>
@@ -52,10 +49,7 @@ export function StaffHeader({
           </div>
         </SheetContent>
       </Sheet>
-      <div className="flex items-center gap-2">
-        <BrandMark className="size-6 shrink-0" />
-        <span className="text-[13px] font-bold text-tide-charcoal">Tide Operations</span>
-      </div>
+      <TideLogo variant="light" height={22} />
       <form action={signOut}>
         <Button type="submit" variant="ghost" size="icon-sm" aria-label="Sign out">
           <LogOut className="size-4 text-muted-foreground" />

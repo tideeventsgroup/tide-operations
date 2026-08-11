@@ -5,11 +5,16 @@ import {
   Banknote,
   CalendarDays,
   Check,
+  Eye,
+  EyeOff,
   FileText,
+  Inbox,
+  Mail,
   MapPin,
   Milestone as MilestoneIcon,
   Pencil,
   Radio,
+  Siren,
   Trash2,
   UserPlus,
   Users,
@@ -23,13 +28,23 @@ import {
   createMilestone,
   updateMilestoneStatus,
 } from "@/lib/actions/events";
-import { createDocument } from "@/lib/actions/documents";
+import { createDocument, toggleDocumentVisibility } from "@/lib/actions/documents";
+import { fulfilClientRequest } from "@/lib/actions/client-requests";
+import { sendEventMessage } from "@/lib/actions/messages";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StageBadge, DocumentStatusBadge, TaskStatusBadge } from "@/components/status-badges";
+import {
+  StageBadge,
+  DocumentStatusBadge,
+  TaskStatusBadge,
+  ClientRequestStatusBadge,
+  IncidentSeverityBadge,
+  IncidentStatusBadge,
+} from "@/components/status-badges";
 import { EmptyState } from "@/components/empty-state";
 import { initials, cn } from "@/lib/utils";
 
@@ -47,21 +62,44 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   if (!event) notFound();
 
-  const [{ data: members }, { data: staffDirectory }, { data: milestones }, { data: tasks }, { data: documents }] =
-    await Promise.all([
-      supabase
-        .from("event_members")
-        .select("id, role_on_event, user_profiles(id, full_name, email)")
-        .eq("event_id", id),
-      supabase.from("user_profiles").select("id, full_name, email").eq("account_type", "staff"),
-      supabase.from("milestones").select("*").eq("event_id", id).order("due_date"),
-      supabase.from("tasks").select("*").eq("event_id", id).order("due_date"),
-      supabase
-        .from("documents")
-        .select("id, reference, title, status, document_types(name)")
-        .eq("event_id", id)
-        .order("created_at", { ascending: false }),
-    ]);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [
+    { data: members },
+    { data: staffDirectory },
+    { data: milestones },
+    { data: tasks },
+    { data: documents },
+    { data: clientRequests },
+    { data: messages },
+    { data: incidents },
+  ] = await Promise.all([
+    supabase
+      .from("event_members")
+      .select("id, role_on_event, user_profiles(id, full_name, email)")
+      .eq("event_id", id),
+    supabase.from("user_profiles").select("id, full_name, email").eq("account_type", "staff"),
+    supabase.from("milestones").select("*").eq("event_id", id).order("due_date"),
+    supabase.from("tasks").select("*").eq("event_id", id).order("due_date"),
+    supabase
+      .from("documents")
+      .select("id, reference, title, status, client_visible, document_types(name)")
+      .eq("event_id", id)
+      .order("created_at", { ascending: false }),
+    supabase.from("client_requests").select("*").eq("event_id", id).order("created_at", { ascending: false }),
+    supabase
+      .from("event_messages")
+      .select("id, body, sender_id, visible_to_client, created_at, user_profiles(full_name)")
+      .eq("event_id", id)
+      .order("created_at"),
+    supabase
+      .from("incidents")
+      .select("id, incident_number, summary, severity, status, time_reported")
+      .eq("event_id", id)
+      .order("created_at"),
+  ]);
 
   const { data: documentTypes } = await supabase
     .from("document_types")
@@ -75,7 +113,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     <div className="mx-auto max-w-5xl">
       <Link
         href="/events"
-        className="mb-3 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-muted-foreground hover:text-tide-charcoal"
+        className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-tide-charcoal"
       >
         <ArrowLeft className="size-3.5" />
         Events
@@ -87,7 +125,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             <h1 className="text-[19px] leading-tight font-bold tracking-tight text-tide-charcoal">{event.name}</h1>
             <StageBadge stage={event.stage} />
           </div>
-          <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {orgName ?? "No client"} · {event.venue ?? "Venue TBC"}
             {event.start_date ? ` · ${event.start_date}${event.end_date ? ` – ${event.end_date}` : ""}` : ""}
           </p>
@@ -113,7 +151,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                       type="submit"
                       disabled={current}
                       className={cn(
-                        "flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold transition-colors duration-150",
+                        "flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-colors duration-150",
                         current
                           ? "bg-tide-teal text-white ring-3 ring-tide-teal/20"
                           : done
@@ -126,7 +164,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                     </button>
                     <span
                       className={cn(
-                        "text-[10px] font-medium whitespace-nowrap",
+                        "text-[11px] font-medium whitespace-nowrap",
                         current ? "text-tide-charcoal" : "text-muted-foreground",
                       )}
                     >
@@ -149,12 +187,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="milestones">Milestones &amp; Tasks</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="incidents">Incidents</TabsTrigger>
+          <TabsTrigger value="requests">Requests</TabsTrigger>
+          <TabsTrigger value="messages">Messages</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-3">
           <Card>
             <CardHeader>
-              <CardTitle className="text-[13px]">Event variables</CardTitle>
+              <CardTitle className="text-sm">Event variables</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-3.5">
               <Field icon={CalendarDays} label="event.name" value={event.name} />
@@ -174,7 +215,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         <TabsContent value="members" className="space-y-3">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-1.5 text-[13px]">
+              <CardTitle className="flex items-center gap-1.5 text-sm">
                 <UserPlus className="size-3.5 text-tide-teal" />
                 Add member
               </CardTitle>
@@ -183,8 +224,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               <form action={addEventMember} className="flex flex-wrap items-end gap-2">
                 <input type="hidden" name="event_id" value={id} />
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">Staff member</label>
-                  <select name="user_id" required className="h-8 rounded-md border border-input bg-background px-2.5 text-[13px]">
+                  <label className="text-[12px] font-medium text-muted-foreground">Staff member</label>
+                  <select name="user_id" required className="h-8 rounded-md border border-input bg-background px-2.5 text-sm">
                     <option value="">Select…</option>
                     {staffDirectory?.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -194,8 +235,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">Role on event</label>
-                  <Input name="role_on_event" placeholder="e.g. Safety Commander" required className="h-8 text-[13px]" />
+                  <label className="text-[12px] font-medium text-muted-foreground">Role on event</label>
+                  <Input name="role_on_event" placeholder="e.g. Safety Commander" required className="h-8 text-sm" />
                 </div>
                 <Button type="submit" size="sm">
                   Add
@@ -223,7 +264,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                         <TableRow key={m.id}>
                           <TableCell className="font-medium text-tide-charcoal">
                             <span className="flex items-center gap-2">
-                              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-tide-teal/12 text-[9.5px] font-bold text-tide-teal">
+                              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-tide-teal/12 text-[10.5px] font-bold text-tide-teal">
                                 {initials(name)}
                               </span>
                               {name}
@@ -254,7 +295,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         <TabsContent value="milestones" className="space-y-3">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-1.5 text-[13px]">
+              <CardTitle className="flex items-center gap-1.5 text-sm">
                 <MilestoneIcon className="size-3.5 text-tide-teal" />
                 Add milestone
               </CardTitle>
@@ -263,12 +304,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               <form action={createMilestone} className="flex flex-wrap items-end gap-2">
                 <input type="hidden" name="event_id" value={id} />
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">Title</label>
-                  <Input name="title" required className="h-8 text-[13px]" />
+                  <label className="text-[12px] font-medium text-muted-foreground">Title</label>
+                  <Input name="title" required className="h-8 text-sm" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">Due date</label>
-                  <Input name="due_date" type="date" className="h-8 text-[13px]" />
+                  <label className="text-[12px] font-medium text-muted-foreground">Due date</label>
+                  <Input name="due_date" type="date" className="h-8 text-sm" />
                 </div>
                 <Button type="submit" size="sm">
                   Add
@@ -279,7 +320,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
           <Card className="gap-0 py-0">
             <CardHeader className="border-b py-2.5">
-              <CardTitle className="text-[13px]">Milestones</CardTitle>
+              <CardTitle className="text-sm">Milestones</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {milestones?.length ? (
@@ -301,7 +342,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                             <select
                               name="status"
                               defaultValue={ms.status}
-                              className="h-7 rounded-md border border-input bg-background px-1.5 text-[11.5px]"
+                              className="h-7 rounded-md border border-input bg-background px-1.5 text-[12.5px]"
                             >
                               <option value="not_started">Not started</option>
                               <option value="on_track">On track</option>
@@ -325,7 +366,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
           <Card className="gap-0 py-0">
             <CardHeader className="border-b py-2.5">
-              <CardTitle className="text-[13px]">Tasks for this event</CardTitle>
+              <CardTitle className="text-sm">Tasks for this event</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {tasks?.length ? (
@@ -362,7 +403,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         <TabsContent value="documents" className="space-y-3">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-1.5 text-[13px]">
+              <CardTitle className="flex items-center gap-1.5 text-sm">
                 <FileText className="size-3.5 text-tide-teal" />
                 New document
               </CardTitle>
@@ -371,8 +412,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               <form action={createDocument} className="flex flex-wrap items-end gap-2">
                 <input type="hidden" name="event_id" value={id} />
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">Type</label>
-                  <select name="document_type_id" required className="h-8 rounded-md border border-input bg-background px-2.5 text-[13px]">
+                  <label className="text-[12px] font-medium text-muted-foreground">Type</label>
+                  <select name="document_type_id" required className="h-8 rounded-md border border-input bg-background px-2.5 text-sm">
                     <option value="">Select…</option>
                     {documentTypes?.map((t) => (
                       <option key={t.id} value={t.id}>
@@ -382,16 +423,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">Title</label>
-                  <Input name="title" placeholder={`${event.name} — OSSP`} required className="h-8 text-[13px]" />
+                  <label className="text-[12px] font-medium text-muted-foreground">Title</label>
+                  <Input name="title" placeholder={`${event.name} — OSSP`} required className="h-8 text-sm" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">File</label>
+                  <label className="text-[12px] font-medium text-muted-foreground">File</label>
                   <input
                     type="file"
                     name="file"
                     required
-                    className="block text-[13px] text-tide-charcoal file:mr-2.5 file:rounded-md file:border-0 file:bg-tide-teal/12 file:px-2.5 file:py-1 file:text-[12px] file:font-medium file:text-tide-teal hover:file:bg-tide-teal/20"
+                    className="block text-sm text-tide-charcoal file:mr-2.5 file:rounded-md file:border-0 file:bg-tide-teal/12 file:px-2.5 file:py-1 file:text-[13px] file:font-medium file:text-tide-teal hover:file:bg-tide-teal/20"
                   />
                 </div>
                 <Button type="submit" size="sm">
@@ -410,6 +451,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                       <TableHead>Document</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead className="text-right">Status</TableHead>
+                      <TableHead className="w-8" />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -418,7 +460,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                         <TableCell className="font-medium text-tide-charcoal">
                           <Link href={`/documents/${doc.id}`} className="block">
                             {doc.title}
-                            <span className="block text-[11px] font-normal text-muted-foreground">
+                            <span className="block text-[12px] font-normal text-muted-foreground">
                               {doc.reference ?? "Unreferenced"}
                             </span>
                           </Link>
@@ -429,6 +471,26 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                         <TableCell className="text-right">
                           <DocumentStatusBadge status={doc.status} />
                         </TableCell>
+                        <TableCell>
+                          <form action={toggleDocumentVisibility}>
+                            <input type="hidden" name="document_id" value={doc.id} />
+                            <input type="hidden" name="event_id" value={id} />
+                            <input type="hidden" name="next_visible" value={(!doc.client_visible).toString()} />
+                            <Button
+                              type="submit"
+                              size="icon-sm"
+                              variant="ghost"
+                              aria-label={doc.client_visible ? "Hide from client portal" : "Share to client portal"}
+                              title={doc.client_visible ? "Visible to client — click to hide" : "Not shared — click to share"}
+                            >
+                              {doc.client_visible ? (
+                                <Eye className="size-3.5 text-tide-teal" />
+                              ) : (
+                                <EyeOff className="size-3.5 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </form>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -437,6 +499,149 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                 <EmptyState icon={FileText} title="No documents yet" className="border-none py-8" />
               )}
             </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="incidents" className="space-y-3">
+          <Card className="gap-0 py-0">
+            <CardHeader className="flex-row items-center justify-between border-b py-2.5">
+              <CardTitle className="flex items-center gap-1.5 text-sm">
+                <Siren className="size-3.5 text-tide-teal" />
+                Incidents
+              </CardTitle>
+              <Button
+                render={<Link href={`/incidents/new?event_id=${id}`} />}
+                nativeButton={false}
+                size="sm"
+                variant="outline"
+              >
+                Report incident
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              {incidents?.length ? (
+                <Table>
+                  <TableBody>
+                    {incidents.map((inc) => (
+                      <TableRow key={inc.id}>
+                        <TableCell className="font-medium text-tide-charcoal">
+                          <Link href={`/incidents/${inc.id}`} className="block">
+                            {inc.incident_number}
+                            <span className="block text-[12px] font-normal text-muted-foreground">{inc.summary}</span>
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <IncidentSeverityBadge severity={inc.severity} />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <IncidentStatusBadge status={inc.status} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <EmptyState icon={Siren} title="No incidents logged for this event" className="border-none py-8" />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="requests" className="space-y-3">
+          <Card className="gap-0 py-0">
+            <CardHeader className="border-b py-2.5">
+              <CardTitle className="flex items-center gap-1.5 text-sm">
+                <Inbox className="size-3.5 text-tide-teal" />
+                Client requests
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {clientRequests?.length ? (
+                <Table>
+                  <TableBody>
+                    {clientRequests.map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell className="font-medium text-tide-charcoal">
+                          {r.title}
+                          <span className="block text-[12px] font-normal text-muted-foreground">
+                            {r.type === "file_upload" ? "File request" : "Information request"}
+                            {r.description ? ` · ${r.description}` : ""}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <ClientRequestStatusBadge status={r.status} />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {r.status === "open" ? (
+                            <form action={fulfilClientRequest} className="flex items-center justify-end gap-1.5">
+                              <input type="hidden" name="event_id" value={id} />
+                              <input type="hidden" name="request_id" value={r.id} />
+                              <Input
+                                name="response_note"
+                                placeholder="Response note (optional)"
+                                className="h-7 w-48 text-[12.5px]"
+                              />
+                              <Button type="submit" size="sm" variant="outline">
+                                Mark fulfilled
+                              </Button>
+                            </form>
+                          ) : (
+                            <span className="text-[12.5px] text-muted-foreground">{r.response_note}</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <EmptyState icon={Inbox} title="No client requests" className="border-none py-8" />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="messages" className="space-y-3">
+          <Card className="gap-0 py-0">
+            <CardContent className="max-h-[420px] space-y-3 overflow-y-auto p-4">
+              {messages?.length ? (
+                messages.map((m) => {
+                  const sender = m.user_profiles as { full_name: string } | null;
+                  const mine = m.sender_id === user?.id;
+                  return (
+                    <div key={m.id} className={cn("flex gap-2.5", mine && "flex-row-reverse text-right")}>
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-tide-teal/12 text-[10.5px] font-bold text-tide-teal">
+                        {initials(sender?.full_name || "?")}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-[12px] text-muted-foreground">
+                          {sender?.full_name ?? "Unknown"}
+                          {!m.visible_to_client && <span className="ml-1.5 text-warning">· internal</span>}
+                        </div>
+                        <div className="mt-0.5 inline-block max-w-md rounded-lg bg-muted px-3 py-1.5 text-sm text-tide-charcoal">
+                          {m.body}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <EmptyState icon={Mail} title="No messages yet" className="border-none py-8" />
+              )}
+            </CardContent>
+            <div className="border-t p-3">
+              <form action={sendEventMessage} className="flex items-end gap-2">
+                <input type="hidden" name="event_id" value={id} />
+                <Textarea name="body" required rows={1} placeholder="Message the client…" className="text-sm" />
+                <label className="flex items-center gap-1.5 text-[12px] whitespace-nowrap text-muted-foreground">
+                  <input type="checkbox" name="visible_to_client" value="true" defaultChecked className="size-3.5" />
+                  <input type="hidden" name="visible_to_client" value="false" />
+                  Visible to client
+                </label>
+                <Button type="submit" size="sm">
+                  Send
+                </Button>
+              </form>
+            </div>
           </Card>
         </TabsContent>
       </Tabs>
@@ -466,8 +671,8 @@ function Field({
         <Icon className="size-3" strokeWidth={2} />
       </div>
       <div className="min-w-0">
-        <div className="font-mono text-[10px] text-tide-teal">{label}</div>
-        <div className="truncate text-[12.5px] font-medium text-tide-charcoal">{value || "—"}</div>
+        <div className="font-mono text-[11px] text-tide-teal">{label}</div>
+        <div className="truncate text-sm font-medium text-tide-charcoal">{value || "—"}</div>
       </div>
     </div>
   );

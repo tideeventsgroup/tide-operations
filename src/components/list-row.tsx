@@ -39,7 +39,7 @@ export function ListRow({
         <div className="truncate text-[14px] font-medium text-tide-charcoal group-hover:text-tide-charcoal">
           {title}
         </div>
-        {subtitle && <div className="truncate text-[12.5px] text-muted-foreground">{subtitle}</div>}
+        {subtitle && <div className="truncate text-sm text-muted-foreground">{subtitle}</div>}
       </div>
       {trailing && <div className="flex shrink-0 items-center gap-2">{trailing}</div>}
     </Link>

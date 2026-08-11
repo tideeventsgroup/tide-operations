@@ -13,13 +13,13 @@ export default function NewClientPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-[13px]">Organisation details</CardTitle>
+          <CardTitle className="text-sm">Organisation details</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={createOrganisation} className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="name">Organisation name</Label>
-              <Input id="name" name="name" required className="h-8 text-[13px]" />
+              <Input id="name" name="name" required className="h-8 text-sm" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="relationship_status">Relationship status</Label>
@@ -27,7 +27,7 @@ export default function NewClientPage() {
                 id="relationship_status"
                 name="relationship_status"
                 defaultValue="prospect"
-                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px]"
+                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm"
               >
                 <option value="prospect">Prospect</option>
                 <option value="active">Active</option>
@@ -36,7 +36,7 @@ export default function NewClientPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="notes">Notes</Label>
-              <Textarea id="notes" name="notes" rows={3} className="text-[13px]" />
+              <Textarea id="notes" name="notes" rows={3} className="text-sm" />
             </div>
             <Button type="submit" size="sm">
               Create client

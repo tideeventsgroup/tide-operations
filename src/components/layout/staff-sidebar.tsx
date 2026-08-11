@@ -18,7 +18,7 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
       href={item.href}
       onClick={onNavigate}
       className={cn(
-        "group relative flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[12.5px] font-medium transition-colors duration-150",
+        "group relative flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors duration-150",
         active
           ? "bg-white/[0.08] text-white"
           : "text-white/55 hover:bg-white/[0.05] hover:text-white/90",
@@ -61,7 +61,7 @@ export function StaffSidebarNav({
       </div>
       {adminItems.length > 0 && (
         <div className="flex flex-col gap-0.5">
-          <div className="px-2.5 pb-1 text-[9.5px] font-semibold tracking-[0.08em] text-white/30 uppercase">
+          <div className="px-2.5 pb-1 text-[10.5px] font-semibold tracking-[0.08em] text-white/30 uppercase">
             Admin
           </div>
           {adminItems.map((item) => (

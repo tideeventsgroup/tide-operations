@@ -22,13 +22,13 @@ export default async function NewEventPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-[13px]">Event details</CardTitle>
+          <CardTitle className="text-sm">Event details</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={createEvent} className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="name">Event name</Label>
-              <Input id="name" name="name" required className="h-8 text-[13px]" />
+              <Input id="name" name="name" required className="h-8 text-sm" />
             </div>
 
             <div className="space-y-1.5">
@@ -36,7 +36,7 @@ export default async function NewEventPage() {
               <select
                 id="organisation_id"
                 name="organisation_id"
-                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px]"
+                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm"
               >
                 <option value="">No client / internal</option>
                 {organisations?.map((org) => (
@@ -50,33 +50,33 @@ export default async function NewEventPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="venue">Venue</Label>
-                <Input id="venue" name="venue" className="h-8 text-[13px]" />
+                <Input id="venue" name="venue" className="h-8 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="location">Location</Label>
-                <Input id="location" name="location" className="h-8 text-[13px]" />
+                <Input id="location" name="location" className="h-8 text-sm" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="start_date">Start date</Label>
-                <Input id="start_date" name="start_date" type="date" className="h-8 text-[13px]" />
+                <Input id="start_date" name="start_date" type="date" className="h-8 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="end_date">End date</Label>
-                <Input id="end_date" name="end_date" type="date" className="h-8 text-[13px]" />
+                <Input id="end_date" name="end_date" type="date" className="h-8 text-sm" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="expected_attendance">Expected attendance</Label>
-                <Input id="expected_attendance" name="expected_attendance" type="number" min={0} className="h-8 text-[13px]" />
+                <Input id="expected_attendance" name="expected_attendance" type="number" min={0} className="h-8 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="control_location">Control location</Label>
-                <Input id="control_location" name="control_location" className="h-8 text-[13px]" />
+                <Input id="control_location" name="control_location" className="h-8 text-sm" />
               </div>
             </div>
 

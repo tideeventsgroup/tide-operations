@@ -63,7 +63,7 @@ export default async function AdminUsersPage() {
                       <span className="flex items-center gap-1.5">
                         {profile.full_name || "(no name)"}
                         {profile.account_type === "pending" && (
-                          <Badge variant="outline" className="bg-warning-bg text-[9.5px] text-warning">
+                          <Badge variant="outline" className="bg-warning-bg text-[10.5px] text-warning">
                             Pending
                           </Badge>
                         )}
@@ -76,7 +76,7 @@ export default async function AdminUsersPage() {
                         <select
                           name="staff_role"
                           defaultValue={profile.staff_role ?? ""}
-                          className="h-7 rounded-md border border-input bg-background px-1.5 text-[12px]"
+                          className="h-7 rounded-md border border-input bg-background px-1.5 text-[13px]"
                         >
                           {ROLE_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -104,7 +104,7 @@ export default async function AdminUsersPage() {
               </TableBody>
             </Table>
           ) : (
-            <p className="p-4 text-[13px] text-muted-foreground">No accounts yet.</p>
+            <p className="p-4 text-sm text-muted-foreground">No accounts yet.</p>
           )}
         </CardContent>
       </Card>

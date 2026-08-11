@@ -107,7 +107,7 @@ export function DocumentWorkflow({
     <div className={cn("mb-4 rounded-lg border p-3", banner.bg, banner.border)}>
       <div className="flex items-start gap-2">
         <Icon className={cn("mt-0.5 size-4 shrink-0", banner.iconColor)} strokeWidth={2} />
-        <p className="text-[12.5px] leading-relaxed text-tide-charcoal">{banner.message}</p>
+        <p className="text-sm leading-relaxed text-tide-charcoal">{banner.message}</p>
       </div>
 
       {options.length > 0 && (
@@ -117,7 +117,7 @@ export function DocumentWorkflow({
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={2}
-            className="border-black/10 bg-white/70 text-[13px]"
+            className="border-black/10 bg-white/70 text-sm"
           />
           <div className="flex flex-wrap gap-1.5">
             {options.map((opt) => (

@@ -1,40 +1,55 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CalendarDays } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { signOut } from "@/lib/actions/auth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
+import { Card, CardContent } from "@/components/ui/card";
+import { StageBadge } from "@/components/status-badges";
 
-export default async function PortalPage() {
+export default async function PortalHomePage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/sign-in");
+  const { data: events } = await supabase
+    .from("events")
+    .select("id, name, venue, start_date, end_date, stage")
+    .order("start_date", { ascending: false, nullsFirst: false });
+
+  if (events?.length === 1) {
+    redirect(`/portal/${events[0].id}`);
+  }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-6 px-4 text-center">
-      <div>
-        <div className="mb-2 text-sm font-semibold tracking-wide text-tide-teal uppercase">
-          Tide Events Group Scotland
+    <div>
+      <PageHeader title="Your events" description="Everything Tide is running or has run for you." />
+
+      {events?.length ? (
+        <div className="space-y-2.5">
+          {events.map((event) => (
+            <Card key={event.id} className="transition-colors hover:border-tide-teal/40">
+              <CardContent>
+                <Link href={`/portal/${event.id}`} className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-tide-charcoal">{event.name}</div>
+                    <div className="mt-0.5 text-[12.5px] text-muted-foreground">
+                      {event.venue ?? "Venue TBC"}
+                      {event.start_date
+                        ? ` · ${event.start_date}${event.end_date ? ` – ${event.end_date}` : ""}`
+                        : ""}
+                    </div>
+                  </div>
+                  <StageBadge stage={event.stage} />
+                </Link>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        <h1 className="text-2xl font-semibold text-tide-charcoal">Client portal</h1>
-      </div>
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="text-base">Coming soon</CardTitle>
-          <CardDescription>
-            The client portal (event overview, shared documents, requests and messaging) is
-            planned for Phase 4 of the build. Your account is set up and ready for when it ships.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={signOut}>
-            <Button type="submit" variant="outline">
-              Sign out
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      ) : (
+        <EmptyState
+          icon={CalendarDays}
+          title="No events yet"
+          description="Events Tide is running for your organisation will appear here."
+        />
+      )}
     </div>
   );
 }

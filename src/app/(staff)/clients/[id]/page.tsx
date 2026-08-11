@@ -30,7 +30,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     <div className="mx-auto max-w-3xl">
       <Link
         href="/clients"
-        className="mb-3 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-muted-foreground hover:text-tide-charcoal"
+        className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-tide-charcoal"
       >
         <ArrowLeft className="size-3.5" />
         Clients
@@ -42,21 +42,21 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         </div>
         <div>
           <h1 className="text-[19px] leading-tight font-bold tracking-tight text-tide-charcoal">{org.name}</h1>
-          <p className="text-[12.5px] text-muted-foreground capitalize">{org.relationship_status} relationship</p>
+          <p className="text-sm text-muted-foreground capitalize">{org.relationship_status} relationship</p>
         </div>
       </div>
 
       <div className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-[13px]">Organisation details</CardTitle>
+            <CardTitle className="text-sm">Organisation details</CardTitle>
           </CardHeader>
           <CardContent>
             <form action={updateOrganisation} className="space-y-3">
               <input type="hidden" name="id" value={org.id} />
               <div className="space-y-1.5">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" name="name" defaultValue={org.name} required className="h-8 text-[13px]" />
+                <Input id="name" name="name" defaultValue={org.name} required className="h-8 text-sm" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
@@ -65,7 +65,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                     id="relationship_status"
                     name="relationship_status"
                     defaultValue={org.relationship_status}
-                    className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px]"
+                    className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm"
                   >
                     <option value="prospect">Prospect</option>
                     <option value="active">Active</option>
@@ -85,7 +85,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="notes">Notes</Label>
-                <Textarea id="notes" name="notes" rows={3} defaultValue={org.notes ?? ""} className="text-[13px]" />
+                <Textarea id="notes" name="notes" rows={3} defaultValue={org.notes ?? ""} className="text-sm" />
               </div>
               <Button type="submit" size="sm">
                 Save changes
@@ -96,7 +96,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-1.5 text-[13px]">
+            <CardTitle className="flex items-center gap-1.5 text-sm">
               <UserPlus className="size-3.5 text-tide-teal" />
               Add contact
             </CardTitle>
@@ -106,19 +106,19 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               <input type="hidden" name="organisation_id" value={org.id} />
               <div className="space-y-1.5">
                 <Label htmlFor="contact_name">Name</Label>
-                <Input id="contact_name" name="name" required className="h-8 text-[13px]" />
+                <Input id="contact_name" name="name" required className="h-8 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="contact_role">Role</Label>
-                <Input id="contact_role" name="role" placeholder="e.g. Event Director" className="h-8 text-[13px]" />
+                <Input id="contact_role" name="role" placeholder="e.g. Event Director" className="h-8 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="contact_email">Email</Label>
-                <Input id="contact_email" name="email" type="email" className="h-8 text-[13px]" />
+                <Input id="contact_email" name="email" type="email" className="h-8 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="contact_phone">Phone</Label>
-                <Input id="contact_phone" name="phone" className="h-8 text-[13px]" />
+                <Input id="contact_phone" name="phone" className="h-8 text-sm" />
               </div>
               <div className="col-span-2 flex items-center gap-2">
                 <input id="is_primary" name="is_primary" type="checkbox" className="h-4 w-4" />
@@ -133,7 +133,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
         <Card className="gap-0 py-0">
           <CardHeader className="border-b py-2.5">
-            <CardTitle className="flex items-center gap-1.5 text-[13px]">
+            <CardTitle className="flex items-center gap-1.5 text-sm">
               <Users className="size-3.5 text-tide-teal" />
               Contacts
             </CardTitle>
@@ -146,12 +146,12 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                     <TableRow key={c.id}>
                       <TableCell className="font-medium text-tide-charcoal">
                         <span className="flex items-center gap-2">
-                          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-tide-teal/12 text-[9.5px] font-bold text-tide-teal">
+                          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-tide-teal/12 text-[10.5px] font-bold text-tide-teal">
                             {initials(c.name)}
                           </span>
                           {c.name}
                           {c.is_primary && (
-                            <Badge variant="outline" className="border-tide-teal/30 bg-tide-teal/10 text-[9.5px] text-tide-teal">
+                            <Badge variant="outline" className="border-tide-teal/30 bg-tide-teal/10 text-[10.5px] text-tide-teal">
                               Primary
                             </Badge>
                           )}
@@ -181,7 +181,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
         <Card className="gap-0 py-0">
           <CardHeader className="border-b py-2.5">
-            <CardTitle className="flex items-center gap-1.5 text-[13px]">
+            <CardTitle className="flex items-center gap-1.5 text-sm">
               <CalendarDays className="size-3.5 text-tide-teal" />
               Events
             </CardTitle>

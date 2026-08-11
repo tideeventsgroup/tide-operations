@@ -34,14 +34,14 @@ export default async function KnowledgeLibraryPage() {
 
       <Card className="mb-4">
         <CardHeader>
-          <CardTitle className="text-[13px]">New knowledge block</CardTitle>
+          <CardTitle className="text-sm">New knowledge block</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={createKnowledgeBlock} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="title">Title</Label>
-                <Input id="title" name="title" required className="h-8 text-[13px]" />
+                <Input id="title" name="title" required className="h-8 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="category">Category</Label>
@@ -49,7 +49,7 @@ export default async function KnowledgeLibraryPage() {
                   id="category"
                   name="category"
                   required
-                  className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px]"
+                  className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm"
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c} value={c}>
@@ -61,7 +61,7 @@ export default async function KnowledgeLibraryPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="content">Content</Label>
-              <Textarea id="content" name="content" rows={4} required className="text-[13px]" />
+              <Textarea id="content" name="content" rows={4} required className="text-sm" />
             </div>
             <Button type="submit" size="sm">
               Add block
@@ -77,14 +77,14 @@ export default async function KnowledgeLibraryPage() {
               <div key={b.id} className="space-y-1 px-4 py-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[13px] font-medium text-tide-charcoal">{b.title}</span>
-                    <Badge variant="outline" className="text-[10px]">{b.category}</Badge>
+                    <span className="text-sm font-medium text-tide-charcoal">{b.title}</span>
+                    <Badge variant="outline" className="text-[11px]">{b.category}</Badge>
                     <Badge
                       variant="outline"
                       className={
                         b.approval_status === "approved"
-                          ? "bg-success-bg text-[10px] text-success"
-                          : "text-[10px]"
+                          ? "bg-success-bg text-[11px] text-success"
+                          : "text-[11px]"
                       }
                     >
                       {b.approval_status}
@@ -99,7 +99,7 @@ export default async function KnowledgeLibraryPage() {
                     </form>
                   )}
                 </div>
-                <p className="text-[12.5px] text-muted-foreground">{b.content}</p>
+                <p className="text-sm text-muted-foreground">{b.content}</p>
               </div>
             ))
           ) : (
