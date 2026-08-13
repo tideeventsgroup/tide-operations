@@ -45,6 +45,7 @@ import {
   ClientRequestStatusBadge,
   IncidentSeverityBadge,
   IncidentStatusBadge,
+  ControlSessionBadge,
 } from "@/components/status-badges";
 import { EmptyState } from "@/components/empty-state";
 import { initials, cn } from "@/lib/utils";
@@ -110,6 +111,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     supabase.from("quotes").select("id, quote_reference, title, status, total, client_visible").eq("event_id", id).order("created_at", { ascending: false }),
     supabase.from("invoices").select("id, invoice_reference, title, status, total, balance_due, client_visible").eq("event_id", id).order("created_at", { ascending: false }),
   ]);
+
+  // The event workspace previously gave no signal of whether Event Control
+  // was even active for this event — a manager had to leave this page to
+  // find out. One extra lightweight query surfaces that inline.
+  const [{ data: controlSession }, { count: openActionCount }] = await Promise.all([
+    supabase.from("event_control_sessions").select("status").eq("event_id", id).maybeSingle(),
+    supabase
+      .from("incident_actions")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", id)
+      .not("status", "in", "(complete,cancelled)"),
+  ]);
+  const openIncidentCount = (incidents ?? []).filter((i) => i.status === "open" || i.status === "monitoring").length;
 
   const { data: documentTypes } = await supabase
     .from("document_types")
@@ -543,6 +557,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         </TabsContent>
 
         <TabsContent value="incidents" className="space-y-3">
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/30 px-4 py-2.5 text-sm">
+            <span className="font-medium text-muted-foreground">Event Control:</span>
+            <ControlSessionBadge status={controlSession?.status ?? "planned"} />
+            <span className="text-muted-foreground">
+              <strong className="text-tide-charcoal">{openIncidentCount}</strong> active incident{openIncidentCount === 1 ? "" : "s"}
+            </span>
+            <span className="text-muted-foreground">
+              <strong className="text-tide-charcoal">{openActionCount ?? 0}</strong> open action{(openActionCount ?? 0) === 1 ? "" : "s"}
+            </span>
+          </div>
           <Card className="gap-0 py-0">
             <CardHeader className="flex-row items-center justify-between border-b py-2.5">
               <CardTitle className="flex items-center gap-1.5 text-sm">

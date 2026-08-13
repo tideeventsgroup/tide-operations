@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { addLogEntry } from "@/lib/actions/incidents";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { FormWithFeedback } from "@/components/form-with-feedback";
 import { cn } from "@/lib/utils";
 
 type LogEntry = {
@@ -125,9 +126,10 @@ export function IncidentLog({
         )}
       </div>
 
-      <form
+      <FormWithFeedback
         action={addLogEntry}
-        onSubmit={() => setCorrectingId(null)}
+        successMessage="Log entry added."
+        onSuccess={() => setCorrectingId(null)}
         className="space-y-2 border-t p-3"
       >
         <input type="hidden" name="incident_id" value={incidentId} />
@@ -141,7 +143,11 @@ export function IncidentLog({
         )}
         <input type="hidden" name="supersedes_entry_id" value={correctingId ?? ""} />
         <div className="flex items-end gap-2">
+          <label htmlFor={`${incidentId}-entry-type`} className="sr-only">
+            Entry type
+          </label>
           <select
+            id={`${incidentId}-entry-type`}
             name="entry_type"
             defaultValue={correctingId ? "correction" : "update"}
             className="h-8 shrink-0 rounded-md border border-input bg-background px-2 text-[12.5px]"
@@ -151,12 +157,15 @@ export function IncidentLog({
             <option value="decision">Decision</option>
             <option value="correction">Correction</option>
           </select>
-          <Textarea name="body" required rows={1} placeholder="Log an update…" className="text-sm" />
+          <label htmlFor={`${incidentId}-entry-body`} className="sr-only">
+            Log entry
+          </label>
+          <Textarea id={`${incidentId}-entry-body`} name="body" required rows={1} placeholder="Log an update…" className="text-sm" />
           <Button type="submit" size="sm">
             Add
           </Button>
         </div>
-      </form>
+      </FormWithFeedback>
     </div>
   );
 }

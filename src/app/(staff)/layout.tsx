@@ -3,6 +3,7 @@ import { LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { StaffSidebarNav } from "@/components/layout/staff-sidebar";
 import { StaffHeader } from "@/components/layout/staff-header";
+import { GlobalSearchDialog } from "@/components/global-search";
 import { TideLogo } from "@/components/tide-logo";
 import { signOut } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,7 @@ export default async function StaffLayout({ children }: { children: React.ReactN
         />
         <main id="main-content" className="min-w-0 flex-1 overflow-x-hidden bg-background px-4 py-6 md:px-7 md:py-8 xl:px-10 xl:py-9">{children}</main>
       </div>
+      <GlobalSearchDialog />
     </div>
   );
 }

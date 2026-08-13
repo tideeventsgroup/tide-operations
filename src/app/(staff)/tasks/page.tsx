@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import { TaskStatusSelect } from "@/components/task-status-select";
+import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { initials, cn } from "@/lib/utils";
 import { Trash2 } from "lucide-react";
 
@@ -137,12 +138,18 @@ export default async function TasksPage() {
                         </Badge>
                         <div className="flex items-center gap-0.5">
                           <TaskStatusSelect taskId={task.id} status={task.status} />
-                          <form action={deleteTask}>
-                            <input type="hidden" name="id" value={task.id} />
-                            <Button type="submit" size="icon-sm" variant="ghost" aria-label="Delete task">
-                              <Trash2 className="size-3.5 text-muted-foreground" />
-                            </Button>
-                          </form>
+                          <ConfirmDeleteButton
+                            action={deleteTask}
+                            fields={{ id: task.id }}
+                            title="Delete this task?"
+                            description={`"${task.title}" will be permanently removed. This can't be undone.`}
+                            successMessage="Task deleted."
+                            trigger={
+                              <Button size="icon-sm" variant="ghost" aria-label="Delete task">
+                                <Trash2 className="size-3.5 text-muted-foreground" />
+                              </Button>
+                            }
+                          />
                         </div>
                       </div>
                     </CardContent>

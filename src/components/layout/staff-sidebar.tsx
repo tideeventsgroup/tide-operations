@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { staffNavItems, visibleAdminNavItems, type NavItem } from "@/lib/nav";
+import { GlobalSearchTrigger } from "@/components/global-search";
 import type { Database } from "@/lib/supabase/types";
 
 type StaffRole = Database["public"]["Enums"]["staff_role"];
@@ -54,6 +55,7 @@ export function StaffSidebarNav({
 
   return (
     <nav aria-label="Primary navigation" className="flex flex-1 flex-col gap-6 overflow-y-auto px-3 py-5">
+      <GlobalSearchTrigger />
       <div className="flex flex-col gap-1">
         {navItems.map((item) => (
           <NavLink key={item.href} item={item} onNavigate={onNavigate} />

@@ -89,7 +89,7 @@ export default async function EventsPage() {
               </TableHeader>
               <TableBody>
                 {remainingEvents.map((event) => (
-                  <TableRow key={event.id} className="cursor-pointer">
+                  <TableRow key={event.id}>
                     <TableCell className="font-medium text-tide-charcoal">
                       <Link href={`/events/${event.id}`} className="block">
                         {event.name}

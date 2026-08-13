@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { updateIncident } from "@/lib/actions/incidents";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FormWithFeedback } from "@/components/form-with-feedback";
 import { IncidentSeverityBadge, IncidentStatusBadge } from "@/components/status-badges";
 
 type IncidentRow = {
@@ -77,12 +78,15 @@ export function IncidentStatusBar({
   }
 
   return (
-    <form action={updateIncident} className="flex flex-wrap items-end gap-2">
+    <FormWithFeedback action={updateIncident} successMessage="Incident updated." className="flex flex-wrap items-end gap-2">
       <input type="hidden" name="incident_id" value={incidentId} />
       <input type="hidden" name="event_id" value={eventId} />
       <div className="space-y-1">
-        <label className="text-[11px] font-medium text-muted-foreground">Status</label>
+        <label htmlFor={`${incidentId}-status`} className="text-[11px] font-medium text-muted-foreground">
+          Status
+        </label>
         <select
+          id={`${incidentId}-status`}
           name="status"
           defaultValue={row.status}
           className="h-8 rounded-md border border-input bg-background px-2 text-[12.5px]"
@@ -94,8 +98,11 @@ export function IncidentStatusBar({
         </select>
       </div>
       <div className="space-y-1">
-        <label className="text-[11px] font-medium text-muted-foreground">Severity</label>
+        <label htmlFor={`${incidentId}-severity`} className="text-[11px] font-medium text-muted-foreground">
+          Severity
+        </label>
         <select
+          id={`${incidentId}-severity`}
           name="severity"
           defaultValue={row.severity}
           className="h-8 rounded-md border border-input bg-background px-2 text-[12.5px]"
@@ -107,8 +114,11 @@ export function IncidentStatusBar({
         </select>
       </div>
       <div className="space-y-1">
-        <label className="text-[11px] font-medium text-muted-foreground">Incident commander</label>
+        <label htmlFor={`${incidentId}-commander`} className="text-[11px] font-medium text-muted-foreground">
+          Incident commander
+        </label>
         <select
+          id={`${incidentId}-commander`}
           name="incident_commander_id"
           defaultValue={row.incident_commander_id ?? ""}
           className="h-8 rounded-md border border-input bg-background px-2 text-[12.5px]"
@@ -122,12 +132,21 @@ export function IncidentStatusBar({
         </select>
       </div>
       <div className="space-y-1">
-        <label className="text-[11px] font-medium text-muted-foreground">Casualties</label>
-        <Input name="casualty_count" type="number" min={0} defaultValue={row.casualty_count} className="h-8 w-20 text-[12.5px]" />
+        <label htmlFor={`${incidentId}-casualties`} className="text-[11px] font-medium text-muted-foreground">
+          Casualties
+        </label>
+        <Input
+          id={`${incidentId}-casualties`}
+          name="casualty_count"
+          type="number"
+          min={0}
+          defaultValue={row.casualty_count}
+          className="h-8 w-20 text-[12.5px]"
+        />
       </div>
       <Button type="submit" size="sm" variant="outline">
         Update
       </Button>
-    </form>
+    </FormWithFeedback>
   );
 }

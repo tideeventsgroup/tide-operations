@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormWithFeedback } from "@/components/form-with-feedback";
 
 const CATEGORIES = ["Medical", "Crowd", "Fire", "Security", "Weather", "Infrastructure", "Lost person", "Welfare", "Traffic", "Other"];
 
@@ -26,15 +27,16 @@ export default async function NewIncidentPage({ searchParams }: { searchParams: 
       <Card>
         <CardHeader><CardTitle className="text-base">Initial report</CardTitle></CardHeader>
         <CardContent>
-          <form action={createIncident} className="space-y-5">
+          <FormWithFeedback action={createIncident} successMessage="Incident reported." className="space-y-5">
             <div className="space-y-1.5"><Label htmlFor="event_id">Event</Label><select id="event_id" name="event_id" required defaultValue={preselectedEventId ?? ""} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select event…</option>{events?.map((event) => <option key={event.id} value={event.id}>{event.event_reference} · {event.name} · {event.start_date ? new Date(event.start_date).toLocaleDateString("en-GB") : "Date TBC"}</option>)}</select></div>
             <div className="space-y-1.5"><Label htmlFor="summary">Incident summary</Label><Input id="summary" name="summary" required placeholder="Short factual summary" className="h-10" /></div>
             <div className="space-y-1.5"><Label htmlFor="description">Initial situation</Label><Textarea id="description" name="description" rows={4} placeholder="What happened, who is involved, immediate risks and action already taken" /></div>
             <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-1.5"><Label htmlFor="severity">Severity</Label><select id="severity" name="severity" defaultValue="minor" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="minor">Minor</option><option value="moderate">Moderate</option><option value="serious">Serious</option><option value="critical">Critical</option></select></div><div className="space-y-1.5"><Label htmlFor="category">Category</Label><select id="category" name="category" defaultValue="" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select category…</option>{CATEGORIES.map((category) => <option key={category}>{category}</option>)}</select></div></div>
             <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-1.5"><Label htmlFor="location">Exact location</Label><Input id="location" name="location" placeholder="Main stage, west entrance…" className="h-10" /></div><div className="space-y-1.5"><Label htmlFor="reported_via">Reported via</Label><select id="reported_via" name="reported_via" defaultValue="radio" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="radio">Radio</option><option value="phone">Phone</option><option value="in_person">In person</option><option value="cctv">CCTV</option><option value="client">Client</option><option value="other">Other</option></select></div></div>
             <div className="space-y-1.5"><Label htmlFor="hazard_reference">Related hazard / plan reference</Label><Input id="hazard_reference" name="hazard_reference" placeholder="Optional risk assessment or plan reference" className="h-10" /></div>
+            <div className="space-y-1.5"><Label htmlFor="file">Photo or file (optional)</Label><Input id="file" name="file" type="file" accept="image/*,video/*,audio/*,.pdf" className="h-10 pt-2" /><p className="text-xs text-muted-foreground">Attach evidence now, or add it later from the incident&apos;s Evidence tab.</p></div>
             <div className="flex items-center justify-end gap-2 border-t pt-4"><Button render={<Link href={backHref} />} nativeButton={false} type="button" variant="outline">Cancel</Button><Button type="submit"><Siren className="size-4" />Open incident</Button></div>
-          </form>
+          </FormWithFeedback>
         </CardContent>
       </Card>
     </div>

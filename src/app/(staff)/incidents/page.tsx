@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/empty-state";
 import { EntityReference } from "@/components/entity-reference";
 
 const STATUS_PRIORITY: Record<string, number> = { open: 0, monitoring: 1, resolved: 2, closed: 3 };
+const SEVERITY_PRIORITY: Record<string, number> = { critical: 0, serious: 1, moderate: 2, minor: 3 };
 
 function eventDistance(startDate: string | null) {
   return startDate ? Math.abs(new Date(startDate).getTime() - Date.now()) : Number.MAX_SAFE_INTEGER;
@@ -30,9 +31,14 @@ export default async function IncidentsPage() {
     supabase.from("incident_actions").select("event_id, status"),
   ]);
 
-  const incidents = [...(incidentData ?? [])].sort(
-    (a, b) => (STATUS_PRIORITY[a.status] ?? 9) - (STATUS_PRIORITY[b.status] ?? 9),
-  );
+  // Open/monitoring incidents surface first, and within each status the most
+  // severe incidents lead — a controller scanning this register should see
+  // the critical incident before the routine ones, not read every row.
+  const incidents = [...(incidentData ?? [])].sort((a, b) => {
+    const statusDiff = (STATUS_PRIORITY[a.status] ?? 9) - (STATUS_PRIORITY[b.status] ?? 9);
+    if (statusDiff !== 0) return statusDiff;
+    return (SEVERITY_PRIORITY[a.severity] ?? 9) - (SEVERITY_PRIORITY[b.severity] ?? 9);
+  });
   const events = [...(eventData ?? [])].sort((a, b) => eventDistance(a.start_date) - eventDistance(b.start_date));
   const closestEvent = events[0];
   const sessionMap = new Map((sessions ?? []).map((session) => [session.event_id, session]));

@@ -7,6 +7,7 @@ const TONE_STYLES = {
   teal: { bg: "bg-tide-teal/12", icon: "text-tide-teal" },
   warning: { bg: "bg-warning-bg", icon: "text-warning" },
   info: { bg: "bg-info-bg", icon: "text-info" },
+  destructive: { bg: "bg-destructive/10", icon: "text-destructive" },
 } as const;
 
 export function StatCard({

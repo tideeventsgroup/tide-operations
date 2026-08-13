@@ -1,23 +1,30 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { sanitizeFilename, assertDbOk, assertValidUpload, DOCUMENT_MIME_ALLOWLIST } from "@/lib/form-utils";
 
-function sanitizeFilename(name: string) {
-  return name.replace(/[^a-zA-Z0-9._-]+/g, "_").slice(-120);
-}
+const idSchema = z.string().uuid();
+
+const createDocumentSchema = z.object({
+  event_id: idSchema,
+  document_type_id: idSchema,
+  title: z.string().trim().min(1, "Title is required").max(300),
+});
 
 export async function createDocument(formData: FormData) {
   const supabase = await createClient();
-  const eventId = String(formData.get("event_id"));
-  const documentTypeId = String(formData.get("document_type_id"));
-  const title = String(formData.get("title"));
-  const file = formData.get("file") as File | null;
+  const input = createDocumentSchema.parse({
+    event_id: formData.get("event_id"),
+    document_type_id: formData.get("document_type_id"),
+    title: formData.get("title"),
+  });
 
-  if (!file || file.size === 0) {
-    throw new Error("Choose a file to upload.");
-  }
+  const file = formData.get("file");
+  if (!(file instanceof File)) throw new Error("Choose a file to upload.");
+  assertValidUpload(file, DOCUMENT_MIME_ALLOWLIST);
 
   const {
     data: { user },
@@ -25,18 +32,18 @@ export async function createDocument(formData: FormData) {
 
   const { data: document, error } = await supabase
     .from("documents")
-    .insert({ event_id: eventId, document_type_id: documentTypeId, title, owner_id: user?.id ?? null })
+    .insert({ ...input, owner_id: user?.id ?? null })
     .select("id")
     .single();
 
-  if (error) throw new Error(error.message);
+  assertDbOk(error, "Could not create the document. Please try again.");
 
-  const storagePath = `${eventId}/documents/${document.id}/v1-${sanitizeFilename(file.name)}`;
+  const storagePath = `${input.event_id}/documents/${document.id}/v1-${sanitizeFilename(file.name)}`;
   const { error: uploadError } = await supabase.storage
     .from("event-files")
     .upload(storagePath, file, { contentType: file.type || undefined, upsert: false });
 
-  if (uploadError) throw new Error(uploadError.message);
+  if (uploadError) throw new Error("Could not upload the file. Please try again.");
 
   const { error: versionError } = await supabase.from("document_versions").insert({
     document_id: document.id,
@@ -48,20 +55,19 @@ export async function createDocument(formData: FormData) {
     created_by: user?.id ?? null,
   });
 
-  if (versionError) throw new Error(versionError.message);
+  assertDbOk(versionError, "The file uploaded but the document record could not be saved. Please contact an administrator.");
 
-  revalidatePath(`/events/${eventId}`);
+  revalidatePath(`/events/${input.event_id}`);
   redirect(`/documents/${document.id}`);
 }
 
 export async function uploadDocumentVersion(formData: FormData) {
   const supabase = await createClient();
-  const documentId = String(formData.get("document_id"));
-  const file = formData.get("file") as File | null;
+  const documentId = idSchema.parse(formData.get("document_id"));
 
-  if (!file || file.size === 0) {
-    throw new Error("Choose a file to upload.");
-  }
+  const file = formData.get("file");
+  if (!(file instanceof File)) throw new Error("Choose a file to upload.");
+  assertValidUpload(file, DOCUMENT_MIME_ALLOWLIST);
 
   const {
     data: { user },
@@ -73,7 +79,7 @@ export async function uploadDocumentVersion(formData: FormData) {
     .eq("id", documentId)
     .single();
 
-  if (documentError) throw new Error(documentError.message);
+  assertDbOk(documentError, "Could not find that document. It may have been removed or you may not have access.");
 
   const { data: lastVersion } = await supabase
     .from("document_versions")
@@ -90,7 +96,7 @@ export async function uploadDocumentVersion(formData: FormData) {
     .from("event-files")
     .upload(storagePath, file, { contentType: file.type || undefined, upsert: false });
 
-  if (uploadError) throw new Error(uploadError.message);
+  if (uploadError) throw new Error("Could not upload the file. Please try again.");
 
   const { error: versionError } = await supabase.from("document_versions").insert({
     document_id: documentId,
@@ -102,15 +108,15 @@ export async function uploadDocumentVersion(formData: FormData) {
     created_by: user?.id ?? null,
   });
 
-  if (versionError) throw new Error(versionError.message);
+  assertDbOk(versionError, "The file uploaded but the new version could not be saved. Please contact an administrator.");
 
   revalidatePath(`/documents/${documentId}`);
 }
 
 export async function toggleDocumentVisibility(formData: FormData) {
   const supabase = await createClient();
-  const documentId = String(formData.get("document_id"));
-  const eventId = String(formData.get("event_id"));
+  const documentId = idSchema.parse(formData.get("document_id"));
+  const eventId = idSchema.parse(formData.get("event_id"));
   const nextVisible = formData.get("next_visible") === "true";
 
   const { error } = await supabase
@@ -118,21 +124,23 @@ export async function toggleDocumentVisibility(formData: FormData) {
     .update({ client_visible: nextVisible })
     .eq("id", documentId);
 
-  if (error) throw new Error(error.message);
+  assertDbOk(error, "Could not update document visibility. Please try again.");
 
   revalidatePath(`/events/${eventId}`);
   revalidatePath(`/documents/${documentId}`);
 }
 
+const documentStatusEnum = z.enum(["draft", "in_review", "needs_updates", "approved", "issued", "archived"]);
+
 export async function transitionDocument(formData: FormData) {
   const supabase = await createClient();
-  const documentId = String(formData.get("document_id"));
-  const newStatus = String(formData.get("new_status"));
+  const documentId = idSchema.parse(formData.get("document_id"));
+  const newStatus = documentStatusEnum.parse(formData.get("new_status"));
   const comment = String(formData.get("comment") ?? "").trim();
 
   const { error } = await supabase.rpc("transition_document_status", {
     p_document_id: documentId,
-    p_new_status: newStatus as never,
+    p_new_status: newStatus,
     p_comment: comment || undefined,
   });
 

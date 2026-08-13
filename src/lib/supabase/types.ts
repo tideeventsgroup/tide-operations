@@ -3045,13 +3045,13 @@ export type Database = {
         Returns: Database["public"]["Enums"]["staff_role"]
       }
       get_dashboard_snapshot: { Args: never; Returns: Json }
+      has_client_organisation_access: {
+        Args: { p_organisation_id: string }
+        Returns: boolean
+      }
       has_event_access: { Args: { p_event_id: string }; Returns: boolean }
       has_event_client_access: {
         Args: { p_event_id: string }
-        Returns: boolean
-      }
-      has_client_organisation_access: {
-        Args: { p_organisation_id: string }
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }

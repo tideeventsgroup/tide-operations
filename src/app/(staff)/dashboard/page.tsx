@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { AlertTriangle, CalendarDays, CheckCircle2, FileCheck2, ListChecks, Zap } from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarDays, CheckCircle2, FileCheck2, ListChecks, Siren, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { EmptyState } from "@/components/empty-state";
-import { StageBadge, DocumentStatusBadge } from "@/components/status-badges";
+import { StageBadge, DocumentStatusBadge, IncidentSeverityBadge } from "@/components/status-badges";
 import { Badge } from "@/components/ui/badge";
 import { NextEventCard } from "@/components/next-event-card";
 import { EntityReference } from "@/components/entity-reference";
@@ -62,10 +62,28 @@ const PRIORITY_STYLES: Record<string, string> = {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const [{ data, error }, { count: activeEventsCount }] = await Promise.all([
-    supabase.rpc("get_dashboard_snapshot"),
-    supabase.from("events").select("id", { count: "exact", head: true }).neq("stage", "complete"),
-  ]);
+  const [{ data, error }, { count: activeEventsCount }, { data: activeIncidents }, { count: overdueActionsCount }] =
+    await Promise.all([
+      supabase.rpc("get_dashboard_snapshot"),
+      supabase.from("events").select("id", { count: "exact", head: true }).neq("stage", "complete"),
+      // Operational status the generic snapshot doesn't cover: what's live
+      // right now, not just portfolio counts. Kept as a direct query rather
+      // than folded into get_dashboard_snapshot so this stays a targeted,
+      // reviewable addition instead of a change to a shared RPC.
+      supabase
+        .from("incidents")
+        .select("id, incident_number, summary, severity, status, event_id, events(name)")
+        .in("status", ["open", "monitoring"])
+        .order("time_reported", { ascending: false }),
+      supabase
+        .from("incident_actions")
+        .select("id", { count: "exact", head: true })
+        .lt("due_at", new Date().toISOString())
+        .not("status", "in", "(complete,cancelled)"),
+    ]);
+
+  const openIncidents = activeIncidents ?? [];
+  const criticalIncidents = openIncidents.filter((i) => i.severity === "critical" || i.severity === "serious");
   const snapshot = (data ?? {
     upcoming_events: [],
     review_queue: [],
@@ -103,6 +121,39 @@ export default async function DashboardPage() {
 
       {error && <p className="mb-4 text-sm text-destructive">Couldn&apos;t load dashboard data: {error.message}</p>}
 
+      {criticalIncidents.length > 0 && (
+        <Card className="mb-6 border-destructive/40 bg-destructive/[0.04] py-0">
+          <CardContent className="p-0">
+            <div className="flex items-center gap-2 border-b border-destructive/20 px-5 py-3">
+              <Siren className="size-4 text-destructive" />
+              <span className="text-sm font-semibold text-destructive">
+                {criticalIncidents.length} critical or serious incident{criticalIncidents.length === 1 ? "" : "s"} open right now
+              </span>
+            </div>
+            <div className="divide-y divide-destructive/10">
+              {criticalIncidents.slice(0, 4).map((incident) => (
+                <Link
+                  key={incident.id}
+                  href={`/incidents/${incident.id}`}
+                  className="flex items-center justify-between gap-3 px-5 py-2.5 hover:bg-destructive/[0.05]"
+                >
+                  <span className="min-w-0">
+                    <span className="font-medium text-tide-charcoal">{incident.incident_number}</span>{" "}
+                    <span className="text-sm text-muted-foreground">
+                      {(incident.events as { name: string } | null)?.name} · {incident.summary}
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <IncidentSeverityBadge severity={incident.severity} />
+                    <ArrowRight className="size-4 text-muted-foreground" />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {nextEvent ? (
         <div className="mb-6">
           <NextEventCard event={nextEvent} openTaskCount={nextEventOpenTasks} reviewCount={nextEventReviewCount} />
@@ -116,8 +167,22 @@ export default async function DashboardPage() {
         />
       )}
 
-      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-6">
         <StatCard label="Active events" value={activeEventsCount ?? 0} href="/events" icon={Zap} />
+        <StatCard
+          label="Active incidents"
+          value={openIncidents.length}
+          href="/incidents"
+          icon={Siren}
+          tone={criticalIncidents.length ? "destructive" : "neutral"}
+        />
+        <StatCard
+          label="Overdue actions"
+          value={overdueActionsCount ?? 0}
+          href="/incidents"
+          icon={AlertTriangle}
+          tone={(overdueActionsCount ?? 0) > 0 ? "warning" : "neutral"}
+        />
         <StatCard
           label="In review / needs updates"
           value={snapshot.review_queue_count}
